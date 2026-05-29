@@ -1,0 +1,32 @@
+{
+  "name": "slack-ai-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coderkanchan/slack-ai-agent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/coderkanchan/slack-ai-agent/issues"
+  },
+  "homepage": "https://github.com/coderkanchan/slack-ai-agent#readme",
+  "description": "",
+  "dependencies": {
+    "@slack/bolt": "^4.7.3",
+    "dotenv": "^17.4.2",
+    "groq-sdk": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
