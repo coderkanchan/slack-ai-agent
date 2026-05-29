@@ -1,13 +1,14 @@
 {
   "name": "slack-ai-agent",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "build": "tsc"
   },
   "repository": {
-    "type": "module",
+    "type": "git",
     "url": "git+https://github.com/coderkanchan/slack-ai-agent.git"
   },
   "keywords": [],
