@@ -5,6 +5,11 @@ const groqService = new GroqService();
 
 slackApp.event('app_mention', async ({ event, say }) => {
   try {
+    if (!event.user) {
+      console.warn('[Runtime Warning] app_mention payload dropped due to missing sender identity.');
+      return;
+    }
+
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
     const reply = await groqService.getChatResponse(event.user, cleanMessage, 'channel');
     await say(`Hello <@${event.user}>! ${reply}`);
@@ -16,6 +21,11 @@ slackApp.event('app_mention', async ({ event, say }) => {
 slackApp.message(async ({ message, say }) => {
   try {
     if ('text' in message && message.text && !message.subtype) {
+      if (!message.user) {
+        console.warn('[Runtime Warning] message event dropped due to missing sender identity.');
+        return;
+      }
+
       const reply = await groqService.getChatResponse(message.user, message.text.trim(), 'dm');
       await say(reply);
     }
