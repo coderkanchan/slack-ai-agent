@@ -5,37 +5,29 @@ const groqService = new GroqService();
 
 slackApp.event('app_mention', async ({ event, say }) => {
   try {
-    if (!event.user) {
-      console.warn('[Runtime Warning] app_mention payload dropped due to missing sender identity.');
-      return;
-    }
-
+    if (!event.user) return;
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
-    const reply = await groqService.getChatResponse(event.user, cleanMessage, 'channel');
+    const reply = await groqService.getChatResponse(event.user, cleanMessage);
     await say(`Hello <@${event.user}>! ${reply}`);
   } catch (error) {
-    console.error('[Runtime Error] app_mention exception:', error);
+    console.error('[Runtime Exception] Application mention stack error:', error);
   }
 });
 
 slackApp.message(async ({ message, say }) => {
   try {
     if ('text' in message && message.text && !message.subtype) {
-      if (!message.user) {
-        console.warn('[Runtime Warning] message event dropped due to missing sender identity.');
-        return;
-      }
-
-      const reply = await groqService.getChatResponse(message.user, message.text.trim(), 'dm');
+      if (!message.user) return;
+      const reply = await groqService.getChatResponse(message.user, message.text.trim());
       await say(reply);
     }
   } catch (error) {
-    console.error('[Runtime Error] message event exception:', error);
+    console.error('[Runtime Exception] Direct Message stack error:', error);
   }
 });
 
 (async () => {
   const port = process.env.PORT || 3000;
   await slackApp.start(port);
-  console.log(`[Processor] Slack Agent runtime initialized on port ${port}`);
+  console.log(`[Processor] Micro-agent running successfully on port ${port}`);
 })();
