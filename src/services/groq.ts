@@ -12,6 +12,7 @@ export class GroqService {
     });
   }
 
+  
   private getSystemMetrics(): string {
     const currentDateTime = new Date().toLocaleString('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -32,7 +33,7 @@ export class GroqService {
       this.memory[userId] = [
         {
           role: 'system',
-          content: 'You are an advanced, high-performance AI workplace agent built natively into Slack. Do not simulate metadata or provide generic fallback answers for date/time or workspace states. Instead, always execute the relevant registered tool to obtain accurate, real-time environment metrics when requested.',
+          content: 'You are an advanced, high-performance AI workplace assistant integrated into Slack. Do not simulate metadata or provide generic fallback answers for date/time or workspace states. Instead, always execute the relevant registered tool to obtain accurate, real-time environment metrics when requested.',
         },
       ];
     }
@@ -40,9 +41,9 @@ export class GroqService {
     const userHistory = this.memory[userId];
     userHistory.push({ role: 'user', content: userMessage });
 
-    const tools: Groq.Chat.CompletionCreateParams.Tool[] = [
+    const tools = [
       {
-        type: 'function',
+        type: 'function' as const,
         function: {
           name: 'getSystemMetrics',
           description: 'Fetches current real-time system metrics, environment state, exact standard local date, and operational timestamps from the host backend.',
@@ -56,11 +57,11 @@ export class GroqService {
 
     try {
       let response = await this.groq.chat.completions.create({
-        messages: userHistory as Groq.Chat.ChatCompletionMessageParam[],
+        messages: userHistory as any[],
         model: 'llama-3.3-70b-versatile',
         temperature: 0.3,
         max_tokens: 512,
-        tools: tools,
+        tools: tools as any[],
         tool_choice: 'auto',
       });
 
@@ -91,7 +92,7 @@ export class GroqService {
         }
 
         const secondResponse = await this.groq.chat.completions.create({
-          messages: userHistory as Groq.Chat.ChatCompletionMessageParam[],
+          messages: userHistory as any[],
           model: 'llama-3.3-70b-versatile',
           temperature: 0.4,
         });
@@ -116,7 +117,7 @@ export class GroqService {
   private pruneContextHistory(userId: string): void {
     const history = this.memory[userId];
     if (history && history.length > this.MAX_HISTORY) {
-      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI workplace agent.' };
+      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI workplace assistant.' };
       this.memory[userId] = [
         rootPrompt,
         ...history.slice(-this.MAX_HISTORY),
