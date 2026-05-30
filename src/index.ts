@@ -1,58 +1,31 @@
-import { App } from '@slack/bolt';
-import dotenv from 'dotenv';
-import { Groq } from 'groq-sdk';
+import { slackApp } from './config/slack.js';
+import { GroqService } from './services/groq.js';
 
-dotenv.config();
+const groqService = new GroqService();
 
-const app = new App({
-  token: process.env.SLACK_BOT_TOKEN as string,
-  appToken: process.env.SLACK_APP_TOKEN as string,
-  socketMode: true,
-});
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY as string,
-});
-
-async function generateAIResponse(userMessage: string, context: string): Promise<string> {
-  const chatCompletion = await groq.chat.completions.create({
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional, smart, and helpful AI Assistant inside Slack. Context: ${context}. Respond clearly and concisely.`
-      },
-      { role: 'user', content: userMessage }
-    ],
-    model: 'llama-3.3-70b-versatile',
-  });
-
-  return chatCompletion.choices[0]?.message?.content || "I'm sorry, I could not process that request.";
-}
-
-app.event('app_mention', async ({ event, say }) => {
+slackApp.event('app_mention', async ({ event, say }) => {
   try {
-    const userMessage = event.text.replace(/<@.*?>/, '').trim(); 
-    const aiResponse = await generateAIResponse(userMessage, "Channel Mention");
-    await say(`Hello <@${event.user}>! ${aiResponse}`);
+    const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
+    const reply = await groqService.getChatResponse(event.user, cleanMessage, 'channel');
+    await say(`Hello <@${event.user}>! ${reply}`);
   } catch (error) {
-    console.error('Error handling app_mention event:', error);
+    console.error('[Runtime Error] app_mention exception:', error);
   }
 });
 
-app.message(async ({ message, say }) => {
+slackApp.message(async ({ message, say }) => {
   try {
-    if ('text' in message && message.text) {
-      const userMessage = message.text.trim();
-      const aiResponse = await generateAIResponse(userMessage, "Direct Message");
-      await say(aiResponse);
+    if ('text' in message && message.text && !message.subtype) {
+      const reply = await groqService.getChatResponse(message.user, message.text.trim(), 'dm');
+      await say(reply);
     }
   } catch (error) {
-    console.error('Error handling message event:', error);
+    console.error('[Runtime Error] message event exception:', error);
   }
 });
 
 (async () => {
   const port = process.env.PORT || 3000;
-  await app.start(port);
-  console.log('⚡ Slack AI Agent server is running successfully!');
+  await slackApp.start(port);
+  console.log(`[Processor] Slack Agent runtime initialized on port ${port}`);
 })();
