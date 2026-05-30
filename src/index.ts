@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import dotenv from 'dotenv';
+import { Groq } from 'groq-sdk';
 
 dotenv.config();
 
@@ -9,6 +10,10 @@ const app = new App({
   socketMode: true,
 });
 
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY as string,
+});
+
 app.event('app_mention', async ({ event, say }) => {
   try {
     await say(`Hello <@${event.user}>! 👋 Maine aapka message receive kar liya hai. Jaldi hi hum yahan Groq AI integrate karenge!`);
@@ -16,14 +21,12 @@ app.event('app_mention', async ({ event, say }) => {
     console.error('Event handle karne mein error aaya:', error);
   }
 });
-// Jab koi direct bot ko personal chat (DM) mein message bheje
+
 app.message(async ({ message, say }) => {
   try {
-    // Check karna ki message normal text hai ya nahi
     if ('text' in message && message.text) {
       const userMessage = message.text.trim();
 
-      // Groq AI ko call karna
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           { role: 'system', content: 'You are a helpful, smart AI Assistant inside a Slack DM.' },
@@ -39,6 +42,7 @@ app.message(async ({ message, say }) => {
     console.error('DM handle karne mein error aaya:', error);
   }
 });
+
 (async () => {
   const port = process.env.PORT || 3000;
   await app.start(port);
