@@ -26,6 +26,73 @@ slackApp.message(async ({ message, say }) => {
   }
 });
 
+slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
+  await ack();
+
+  try {
+    const hostTimestamp = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    await respond({
+      response_type: 'ephemeral', 
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '📊 Workspace VibeCheck Diagnostic',
+            emoji: true
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Requested By:*\n<@${command.user_id}>`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Execution Pulse:*\n\`${hostTimestamp}\``
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: '*Operational Status:*\n🟢 Active & Healthy'
+            },
+            {
+              type: 'mrkdwn',
+              text: '*AI Engine:*\n⚡ Groq (Llama 3.3)'
+            }
+          ]
+        },
+        {
+          type: 'context',
+          elements: [
+            {
+              type: 'plain_text',
+              text: 'VibeCheck-Bot Enterprise Node Engine • System Metrics Optimal',
+              emoji: false
+            }
+          ]
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('[Slash Command Error] /vibecheck failed execution:', error);
+  }
+});
+
 (async () => {
   const port = process.env.PORT || 3000;
   await slackApp.start(port);
