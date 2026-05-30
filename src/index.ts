@@ -4,19 +4,16 @@ import { Groq } from 'groq-sdk';
 
 dotenv.config();
 
-// Initialize Slack App
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN as string,
   appToken: process.env.SLACK_APP_TOKEN as string,
   socketMode: true,
 });
 
-// Initialize Groq SDK
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY as string,
 });
 
-// Helper function to generate AI responses using Groq
 async function generateAIResponse(userMessage: string, context: string): Promise<string> {
   const chatCompletion = await groq.chat.completions.create({
     messages: [
@@ -32,10 +29,9 @@ async function generateAIResponse(userMessage: string, context: string): Promise
   return chatCompletion.choices[0]?.message?.content || "I'm sorry, I could not process that request.";
 }
 
-// Handle App Mentions in Channels
 app.event('app_mention', async ({ event, say }) => {
   try {
-    const userMessage = event.text.replace(/<@.*?>/, '').trim(); // Remove the bot mention tag from text
+    const userMessage = event.text.replace(/<@.*?>/, '').trim(); 
     const aiResponse = await generateAIResponse(userMessage, "Channel Mention");
     await say(`Hello <@${event.user}>! ${aiResponse}`);
   } catch (error) {
@@ -43,7 +39,6 @@ app.event('app_mention', async ({ event, say }) => {
   }
 });
 
-// Handle Direct Messages (DMs)
 app.message(async ({ message, say }) => {
   try {
     if ('text' in message && message.text) {
@@ -56,7 +51,6 @@ app.message(async ({ message, say }) => {
   }
 });
 
-// Start the Server
 (async () => {
   const port = process.env.PORT || 3000;
   await app.start(port);
