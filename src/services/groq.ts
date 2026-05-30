@@ -4,7 +4,7 @@ import { ChatMessage, ConversationMemory } from '../types/index.js';
 export class GroqService {
   private groq: Groq;
   private memory: ConversationMemory = {};
-  private readonly MAX_HISTORY = 10;
+  private readonly MAX_HISTORY = 12;
 
   constructor() {
     this.groq = new Groq({
@@ -12,12 +12,27 @@ export class GroqService {
     });
   }
 
-  public async getChatResponse(userId: string, userMessage: string, channelType: string): Promise<string> {
+  private getSystemMetrics(): string {
+    const currentDateTime = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'full',
+      timeStyle: 'medium'
+    });
+    return JSON.stringify({
+      status: 'OPERATIONAL',
+      environment: 'production',
+      timestamp: currentDateTime,
+      timezone: 'Asia/Kolkata',
+      latency: 'optimal'
+    });
+  }
+
+  public async getChatResponse(userId: string, userMessage: string): Promise<string> {
     if (!this.memory[userId]) {
       this.memory[userId] = [
         {
           role: 'system',
-          content: 'You are an advanced, professional AI workplace assistant integrated into Slack. Provide direct, objective, and context-aware responses suitable for corporate communications. Maintain absolute clarity.',
+          content: 'You are an advanced, high-performance AI workspace agent built natively into Slack. Do not simulate metadata or provide generic fallback answers for date/time or workspace states. Instead, always execute the relevant registered tool to obtain accurate, real-time environment metrics when requested.',
         },
       ];
     }
@@ -25,33 +40,87 @@ export class GroqService {
     const userHistory = this.memory[userId];
     userHistory.push({ role: 'user', content: userMessage });
 
+    const tools = [
+      {
+        type: 'function' as const,
+        function: {
+          name: 'getSystemMetrics',
+          description: 'Fetches current real-time system metrics, environment state, exact standard local date, and operational timestamps from the host backend.',
+          parameters: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    ];
+
     try {
-      const response = await this.groq.chat.completions.create({
+      let response = await this.groq.chat.completions.create({
         messages: userHistory,
         model: 'llama-3.3-70b-versatile',
-        temperature: 0.7,
+        temperature: 0.3, 
         max_tokens: 512,
+        tools: tools,
+        tool_choice: 'auto',
       });
 
-      const assistantReply = response.choices[0]?.message?.content || 'Unable to process request.';
+      let responseMessage = response.choices[0]?.message;
 
-      userHistory.push({ role: 'assistant', content: assistantReply });
-
-      if (userHistory.length > this.MAX_HISTORY) {
-        const systemPrompt = userHistory[0] || {
-          role: 'system',
-          content: 'You are an advanced, professional AI workplace assistant integrated into Slack.'
-        };
-        this.memory[userId] = [
-          systemPrompt,
-          ...userHistory.slice(-this.MAX_HISTORY),
-        ];
+      if (!responseMessage) {
+        return 'An orchestration exception occurred.';
       }
 
-      return assistantReply;
+      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        userHistory.push({
+          role: 'assistant',
+          content: responseMessage.content || '',
+          tool_calls: responseMessage.tool_calls
+        });
+
+        for (const toolCall of responseMessage.tool_calls) {
+          if (toolCall.function.name === 'getSystemMetrics') {
+            const toolResult = this.getSystemMetrics();
+
+            userHistory.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              name: toolCall.function.name,
+              content: toolResult,
+            });
+          }
+        }
+
+        const secondResponse = await this.groq.chat.completions.create({
+          messages: userHistory,
+          model: 'llama-3.3-70b-versatile',
+          temperature: 0.4,
+        });
+
+        const finalReply = secondResponse.choices[0]?.message?.content || 'Execution failed to compute.';
+        userHistory.push({ role: 'assistant', content: finalReply });
+        this.pruneContextHistory(userId);
+        return finalReply;
+      }
+
+      const standardReply = responseMessage.content || 'Unable to process communication trace.';
+      userHistory.push({ role: 'assistant', content: standardReply });
+      this.pruneContextHistory(userId);
+      return standardReply;
+
     } catch (error) {
-      console.error(`[GroqService Error] Failed execution for user ${userId}:`, error);
-      return 'An infrastructure error occurred while processing your request.';
+      console.error(`[Agent Core Error] Autonomous execution tracing failed for client ${userId}:`, error);
+      return 'The agent gateway encountered an engineering exception processing this trace.';
+    }
+  }
+
+  private pruneContextHistory(userId: string): void {
+    const history = this.memory[userId];
+    if (history && history.length > this.MAX_HISTORY) {
+      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI workspace agent.' };
+      this.memory[userId] = [
+        rootPrompt,
+        ...history.slice(-this.MAX_HISTORY),
+      ];
     }
   }
 }
