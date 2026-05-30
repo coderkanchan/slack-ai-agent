@@ -22,11 +22,12 @@ export class GroqService {
       ];
     }
 
-    this.memory[userId].push({ role: 'user', content: userMessage });
+    const userHistory = this.memory[userId];
+    userHistory.push({ role: 'user', content: userMessage });
 
     try {
       const response = await this.groq.chat.completions.create({
-        messages: this.memory[userId],
+        messages: userHistory,
         model: 'llama-3.3-70b-versatile',
         temperature: 0.7,
         max_tokens: 512,
@@ -34,12 +35,16 @@ export class GroqService {
 
       const assistantReply = response.choices[0]?.message?.content || 'Unable to process request.';
 
-      this.memory[userId].push({ role: 'assistant', content: assistantReply });
+      userHistory.push({ role: 'assistant', content: assistantReply });
 
-      if (this.memory[userId].length > this.MAX_HISTORY) {
+      if (userHistory.length > this.MAX_HISTORY) {
+        const systemPrompt = userHistory[0] || {
+          role: 'system',
+          content: 'You are an advanced, professional AI workplace assistant integrated into Slack.'
+        };
         this.memory[userId] = [
-          this.memory[userId][0],
-          ...this.memory[userId].slice(-this.MAX_HISTORY),
+          systemPrompt,
+          ...userHistory.slice(-this.MAX_HISTORY),
         ];
       }
 
