@@ -115,7 +115,9 @@ export class GroqService {
   }
 
   private pruneContextHistory(userId: string): void {
+
     const history = this.memory[userId];
+    
     if (history && history.length > this.MAX_HISTORY) {
       const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI workplace assistant.' };
       this.memory[userId] = [
