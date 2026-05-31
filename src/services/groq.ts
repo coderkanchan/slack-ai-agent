@@ -119,16 +119,24 @@ export class GroqService {
 
         for (const toolCall of responseMessage.tool_calls) {
           let toolResult = '';
-          const args = JSON.parse(toolCall.function.arguments);
+
+          let args: any = {};
+          try {
+            if (toolCall.function.arguments) {
+              args = JSON.parse(toolCall.function.arguments);
+            }
+          } catch (e) {
+            console.warn('[Orchestrator Warning] Argument tracing structure payload format unresolvable.');
+          }
 
           if (toolCall.function.name === 'getSystemMetrics') {
             toolResult = this.getSystemMetrics();
           } else if (toolCall.function.name === 'executeInternetSearch') {
-            toolResult = await this.searchService.executeSearch(args.query);
+            toolResult = await this.searchService.executeSearch(args.query || '');
           } else if (toolCall.function.name === 'createTask') {
-            toolResult = await this.taskService.createTask(args.title, args.assignedTo, userId, channelId, args.dueDate);
+            toolResult = await this.taskService.createTask(args.title || 'Untitled Task', args.assignedTo || userId, userId, channelId, args.dueDate);
           } else if (toolCall.function.name === 'getWorkspaceTasks') {
-            toolResult = await this.taskService.getChannelTasks(channelId, args.targetUser);
+            toolResult = await this.taskService.getChannelTasks(channelId, args ? args.targetUser : undefined);
           }
 
           userHistory.push({
