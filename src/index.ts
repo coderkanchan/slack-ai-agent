@@ -1,6 +1,6 @@
-import { slackApp } from './config/slack.js';
-import { connectDatabase } from './config/db.js';
-import { GroqService } from './services/groq.js';
+import { slackApp } from './config/slack';
+import { connectDatabase } from './config/db';
+import { GroqService } from './services/groq';
 
 const groqService = new GroqService();
 
@@ -105,9 +105,3 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
     console.error('[Slash Command Error] /vibecheck failed execution:', error);
   }
 });
-
-(async () => {
-  const port = process.env.PORT || 3000;
-  await slackApp.start(port);
-  console.log(`[Processor] Micro-agent running successfully on port ${port}`);
-})();
