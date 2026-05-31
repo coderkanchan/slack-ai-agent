@@ -1,7 +1,20 @@
 import { slackApp } from './config/slack.js';
+import { connectDatabase } from './config/db.js';
 import { GroqService } from './services/groq.js';
 
 const groqService = new GroqService();
+
+const startServer = async () => {
+  await connectDatabase();
+
+  const port = process.env.PORT || 3000;
+  await slackApp.start(port);
+  console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
+};
+
+startServer().catch((err) => {
+  console.error('[Critical App Core Crash]:', err);
+});
 
 slackApp.event('app_mention', async ({ event, say }) => {
   try {
@@ -37,7 +50,7 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
     });
 
     await respond({
-      response_type: 'ephemeral', 
+      response_type: 'ephemeral',
       blocks: [
         {
           type: 'header',
