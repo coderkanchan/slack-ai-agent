@@ -1,8 +1,10 @@
 import { Groq } from 'groq-sdk';
 import { ChatMessage, ConversationMemory } from '../types/index.js';
+import { SearchService } from './search.js';
 
 export class GroqService {
   private groq: Groq;
+  private searchService: SearchService;
   private memory: ConversationMemory = {};
   private readonly MAX_HISTORY = 12;
 
@@ -10,9 +12,9 @@ export class GroqService {
     this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY as string,
     });
+    this.searchService = new SearchService();
   }
 
-  
   private getSystemMetrics(): string {
     const currentDateTime = new Date().toLocaleString('en-US', {
       timeZone: 'Asia/Kolkata',
@@ -33,7 +35,7 @@ export class GroqService {
       this.memory[userId] = [
         {
           role: 'system',
-          content: 'You are an advanced, high-performance AI workplace assistant integrated into Slack. Do not simulate metadata or provide generic fallback answers for date/time or workspace states. Instead, always execute the relevant registered tool to obtain accurate, real-time environment metrics when requested.',
+          content: 'You are an advanced corporate AI Orchestrator Agent inside Slack. You have autonomous access to engineering tools. If a user asks about system operational details, use getSystemMetrics. If a user asks about latest news, codes, error documentation, versions, or external web facts, autonomously invoke executeInternetSearch to fetch live ground truth data before answering.',
         },
       ];
     }
@@ -46,10 +48,24 @@ export class GroqService {
         type: 'function' as const,
         function: {
           name: 'getSystemMetrics',
-          description: 'Fetches current real-time system metrics, environment state, exact standard local date, and operational timestamps from the host backend.',
+          description: 'Fetches current real-time system metrics, operational timestamps, and environment state.',
+          parameters: { type: 'object', properties: {} },
+        },
+      },
+      {
+        type: 'function' as const,
+        function: {
+          name: 'executeInternetSearch',
+          description: 'Searches the live internet in real-time to fetch recent tech documentation, patches, versions, news, or global knowledge answers.',
           parameters: {
             type: 'object',
-            properties: {},
+            properties: {
+              query: {
+                type: 'string',
+                description: 'The search query string optimized for lookup.',
+              },
+            },
+            required: ['query'],
           },
         },
       },
@@ -59,17 +75,14 @@ export class GroqService {
       let response = await this.groq.chat.completions.create({
         messages: userHistory as any[],
         model: 'llama-3.3-70b-versatile',
-        temperature: 0.3,
-        max_tokens: 512,
+        temperature: 0.2,
+        max_tokens: 600,
         tools: tools as any[],
         tool_choice: 'auto',
       });
 
       let responseMessage = response.choices[0]?.message;
-
-      if (!responseMessage) {
-        return 'An orchestration exception occurred.';
-      }
+      if (!responseMessage) return 'An orchestration exception occurred.';
 
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
         userHistory.push({
@@ -79,25 +92,30 @@ export class GroqService {
         });
 
         for (const toolCall of responseMessage.tool_calls) {
-          if (toolCall.function.name === 'getSystemMetrics') {
-            const toolResult = this.getSystemMetrics();
+          let toolResult = '';
 
-            userHistory.push({
-              role: 'tool',
-              tool_call_id: toolCall.id,
-              name: toolCall.function.name,
-              content: toolResult,
-            });
+          if (toolCall.function.name === 'getSystemMetrics') {
+            toolResult = this.getSystemMetrics();
+          } else if (toolCall.function.name === 'executeInternetSearch') {
+            const args = JSON.parse(toolCall.function.arguments);
+            toolResult = await this.searchService.executeSearch(args.query);
           }
+
+          userHistory.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            name: toolCall.function.name,
+            content: toolResult,
+          });
         }
 
         const secondResponse = await this.groq.chat.completions.create({
           messages: userHistory as any[],
           model: 'llama-3.3-70b-versatile',
-          temperature: 0.4,
+          temperature: 0.3,
         });
 
-        const finalReply = secondResponse.choices[0]?.message?.content || 'Execution failed to compute.';
+        const finalReply = secondResponse.choices[0]?.message?.content || 'Execution failed to compute tool telemetry.';
         userHistory.push({ role: 'assistant', content: finalReply });
         this.pruneContextHistory(userId);
         return finalReply;
@@ -109,21 +127,16 @@ export class GroqService {
       return standardReply;
 
     } catch (error) {
-      console.error(`[Agent Core Error] Autonomous execution tracing failed for client ${userId}:`, error);
-      return 'The agent gateway encountered an engineering exception processing this trace.';
+      console.error(`[Agent Multi-Tool Error] Tracing failed for client ${userId}:`, error);
+      return 'The agent gateway encountered an error executing multiple tool pipelines.';
     }
   }
 
   private pruneContextHistory(userId: string): void {
-
     const history = this.memory[userId];
-    
     if (history && history.length > this.MAX_HISTORY) {
-      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI workplace assistant.' };
-      this.memory[userId] = [
-        rootPrompt,
-        ...history.slice(-this.MAX_HISTORY),
-      ];
+      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI orchestrator.' };
+      this.memory[userId] = [rootPrompt, ...history.slice(-this.MAX_HISTORY)];
     }
   }
 }
