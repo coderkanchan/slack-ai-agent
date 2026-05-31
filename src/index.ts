@@ -20,7 +20,8 @@ slackApp.event('app_mention', async ({ event, say }) => {
   try {
     if (!event.user) return;
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
-    const reply = await groqService.getChatResponse(event.user, cleanMessage);
+
+    const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
     await say(`Hello <@${event.user}>! ${reply}`);
   } catch (error) {
     console.error('[Runtime Exception] Application mention stack error:', error);
@@ -31,7 +32,8 @@ slackApp.message(async ({ message, say }) => {
   try {
     if ('text' in message && message.text && !message.subtype) {
       if (!message.user) return;
-      const reply = await groqService.getChatResponse(message.user, message.text.trim());
+
+      const reply = await groqService.getChatResponse(message.user, message.text.trim(), message.channel);
       await say(reply);
     }
   } catch (error) {
