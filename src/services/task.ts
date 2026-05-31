@@ -3,16 +3,22 @@ import { TaskModel } from '../models/Task.js';
 export class TaskService {
   public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string) {
     try {
-      const parsedDueDate = dueDateStr ? new Date(dueDateStr) : undefined;
-
-      const newTask = await TaskModel.create({
+      const taskData: any = {
         title: title,
         assignedTo: assignedTo,
         assignedBy: assignedBy,
         channelId: channelId,
-        status: 'PENDING',
-        dueDate: parsedDueDate
-      });
+        status: 'PENDING'
+      };
+
+      if (dueDateStr) {
+        const parsedDate = new Date(dueDateStr);
+        if (!isNaN(parsedDate.getTime())) {
+          taskData.dueDate = parsedDate;
+        }
+      }
+
+      const newTask = await TaskModel.create(taskData);
 
       return JSON.stringify({
         status: 'SUCCESS',
