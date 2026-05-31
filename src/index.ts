@@ -1,6 +1,6 @@
-import { slackApp } from './config/slack';
-import { connectDatabase } from './config/db';
-import { GroqService } from './services/groq';
+import { slackApp } from './config/slack.js';
+import { connectDatabase } from './config/db.js';
+import { GroqService } from './services/groq.js';
 
 const groqService = new GroqService();
 
