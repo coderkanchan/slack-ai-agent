@@ -1,10 +1,12 @@
 import { Groq } from 'groq-sdk';
 import { ChatMessage, ConversationMemory } from '../types/index.js';
 import { SearchService } from './search.js';
+import { TaskService } from './task.js';
 
 export class GroqService {
   private groq: Groq;
   private searchService: SearchService;
+  private taskService: TaskService;
   private memory: ConversationMemory = {};
   private readonly MAX_HISTORY = 12;
 
@@ -13,29 +15,29 @@ export class GroqService {
       apiKey: process.env.GROQ_API_KEY as string,
     });
     this.searchService = new SearchService();
+    this.taskService = new TaskService();
   }
 
   private getSystemMetrics(): string {
-    const currentDateTime = new Date().toLocaleString('en-US', {
-      timeZone: 'Asia/Kolkata',
-      dateStyle: 'full',
-      timeStyle: 'medium'
-    });
     return JSON.stringify({
       status: 'OPERATIONAL',
       environment: 'production',
-      timestamp: currentDateTime,
-      timezone: 'Asia/Kolkata',
+      timestamp: new Date().toISOString(),
       latency: 'optimal'
     });
   }
 
-  public async getChatResponse(userId: string, userMessage: string): Promise<string> {
+  public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<string> {
     if (!this.memory[userId]) {
       this.memory[userId] = [
         {
           role: 'system',
-          content: 'You are an advanced corporate AI Orchestrator Agent inside Slack. You have autonomous access to engineering tools. If a user asks about system operational details, use getSystemMetrics. If a user asks about latest news, codes, error documentation, versions, or external web facts, autonomously invoke executeInternetSearch to fetch live ground truth data before answering.',
+          content: `You are an advanced corporate AI Orchestrator Agent inside Slack. Your context: Current User ID is ${userId} and Current Channel ID is ${channelId}.
+          You have autonomous access to workspace tools. 
+          1. If asked about system health/metrics, invoke getSystemMetrics.
+          2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
+          3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
+          4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.`,
         },
       ];
     }
@@ -48,7 +50,7 @@ export class GroqService {
         type: 'function' as const,
         function: {
           name: 'getSystemMetrics',
-          description: 'Fetches current real-time system metrics, operational timestamps, and environment state.',
+          description: 'Fetches current system performance telemetry status logs.',
           parameters: { type: 'object', properties: {} },
         },
       },
@@ -56,16 +58,40 @@ export class GroqService {
         type: 'function' as const,
         function: {
           name: 'executeInternetSearch',
-          description: 'Searches the live internet in real-time to fetch recent tech documentation, patches, versions, news, or global knowledge answers.',
+          description: 'Searches the live web environment using Tavily for recent real-time documentations and news.',
+          parameters: {
+            type: 'object',
+            properties: { query: { type: 'string', description: 'The search criteria string.' } },
+            required: ['query'],
+          },
+        },
+      },
+      {
+        type: 'function' as const,
+        function: {
+          name: 'createTask',
+          description: 'Creates and commits a new task into the workspace MongoDB database.',
           parameters: {
             type: 'object',
             properties: {
-              query: {
-                type: 'string',
-                description: 'The search query string optimized for lookup.',
-              },
+              title: { type: 'string', description: 'The explicit description of the assignment action items.' },
+              assignedTo: { type: 'string', description: 'The Slack User ID string (e.g., U123AB). Extract from syntax.' },
+              dueDate: { type: 'string', description: 'Optional ISO date string representation or format YYYY-MM-DD.' }
             },
-            required: ['query'],
+            required: ['title', 'assignedTo'],
+          },
+        },
+      },
+      {
+        type: 'function' as const,
+        function: {
+          name: 'getWorkspaceTasks',
+          description: 'Queries the database layer to fetch active registries or todos filtering this team ecosystem.',
+          parameters: {
+            type: 'object',
+            properties: {
+              targetUser: { type: 'string', description: 'Optional specific target Slack user identifier to query logs for.' }
+            }
           },
         },
       },
@@ -76,7 +102,7 @@ export class GroqService {
         messages: userHistory as any[],
         model: 'llama-3.3-70b-versatile',
         temperature: 0.2,
-        max_tokens: 600,
+        max_tokens: 700,
         tools: tools as any[],
         tool_choice: 'auto',
       });
@@ -93,12 +119,16 @@ export class GroqService {
 
         for (const toolCall of responseMessage.tool_calls) {
           let toolResult = '';
+          const args = JSON.parse(toolCall.function.arguments);
 
           if (toolCall.function.name === 'getSystemMetrics') {
             toolResult = this.getSystemMetrics();
           } else if (toolCall.function.name === 'executeInternetSearch') {
-            const args = JSON.parse(toolCall.function.arguments);
             toolResult = await this.searchService.executeSearch(args.query);
+          } else if (toolCall.function.name === 'createTask') {
+            toolResult = await this.taskService.createTask(args.title, args.assignedTo, userId, channelId, args.dueDate);
+          } else if (toolCall.function.name === 'getWorkspaceTasks') {
+            toolResult = await this.taskService.getChannelTasks(channelId, args.targetUser);
           }
 
           userHistory.push({
@@ -127,15 +157,15 @@ export class GroqService {
       return standardReply;
 
     } catch (error) {
-      console.error(`[Agent Multi-Tool Error] Tracing failed for client ${userId}:`, error);
-      return 'The agent gateway encountered an error executing multiple tool pipelines.';
+      console.error(`[Agent Core Failure]:`, error);
+      return 'The agent gateway encountered an error executing database tool pipelines.';
     }
   }
 
   private pruneContextHistory(userId: string): void {
     const history = this.memory[userId];
     if (history && history.length > this.MAX_HISTORY) {
-      const rootPrompt = history[0] || { role: 'system', content: 'You are an advanced AI orchestrator.' };
+      const rootPrompt = history[0];
       this.memory[userId] = [rootPrompt, ...history.slice(-this.MAX_HISTORY)];
     }
   }
