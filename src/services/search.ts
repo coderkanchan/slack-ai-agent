@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export class SearchService {
-  
+ 
   public async executeSearch(query: string): Promise<string> {
     try {
       const response = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
@@ -13,11 +13,13 @@ export class SearchService {
       const html = response.data;
       const matchRegex = /<a class="result__snip"[^>]*>([\s\S]*?)<\/a>/g;
       const snippets: string[] = [];
-      let match;
+      let match: RegExpExecArray | null;
 
       while ((match = matchRegex.exec(html)) !== null && snippets.length < 3) {
-        const cleanText = match[1].replace(/<[^>]*>/g, '').trim();
-        if (cleanText) snippets.push(cleanText);
+        if (match && match[1]) {
+          const cleanText = match[1].replace(/<[^>]*>/g, '').trim();
+          if (cleanText) snippets.push(cleanText);
+        }
       }
 
       if (snippets.length === 0) {
