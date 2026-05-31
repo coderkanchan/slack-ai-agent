@@ -1,16 +1,15 @@
 import { TaskModel } from '../models/Task.js';
 
 export class TaskService {
-
   public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string) {
     try {
       const parsedDueDate = dueDateStr ? new Date(dueDateStr) : undefined;
 
       const newTask = await TaskModel.create({
-        title,
-        assignedTo,
-        assignedBy,
-        channelId,
+        title: title,
+        assignedTo: assignedTo,
+        assignedBy: assignedBy,
+        channelId: channelId,
         status: 'PENDING',
         dueDate: parsedDueDate
       });
