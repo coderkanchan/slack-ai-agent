@@ -37,7 +37,8 @@ export class GroqService {
           1. If asked about system health/metrics, invoke getSystemMetrics.
           2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
           3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
-          4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.`,
+          4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
+          5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`,
         },
       ];
     }
@@ -95,6 +96,21 @@ export class GroqService {
           },
         },
       },
+      {
+        type: 'function' as const,
+        function: {
+          name: 'updateTaskStatus',
+          description: 'Updates an existing task status field inside the remote MongoDB cluster.',
+          parameters: {
+            type: 'object',
+            properties: {
+              taskId: { type: 'string', description: 'The structural database object ID string.' },
+              status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'], description: 'The target state mutation.' }
+            },
+            required: ['taskId', 'status'],
+          },
+        },
+      },
     ];
 
     try {
@@ -137,6 +153,8 @@ export class GroqService {
             toolResult = await this.taskService.createTask(args.title || 'Untitled Task', args.assignedTo || userId, userId, channelId, args.dueDate);
           } else if (toolCall.function.name === 'getWorkspaceTasks') {
             toolResult = await this.taskService.getChannelTasks(channelId, args ? args.targetUser : undefined);
+          } else if (toolCall.function.name === 'updateTaskStatus') {
+            toolResult = await this.taskService.updateTaskStatus(args.taskId, args.status);
           }
 
           userHistory.push({
