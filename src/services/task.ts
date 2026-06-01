@@ -56,4 +56,28 @@ export class TaskService {
       return JSON.stringify({ status: 'ERROR', message: error.message });
     }
   }
+
+  public async updateTaskStatus(taskId: string, newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') {
+    try {
+      const updatedTask = await TaskModel.findByIdAndUpdate(
+        taskId,
+        { status: newStatus },
+        { new: true }
+      );
+
+      if (!updatedTask) {
+        return JSON.stringify({ status: 'ERROR', message: 'Task ID not found in database cluster registries.' });
+      }
+
+      return JSON.stringify({
+        status: 'SUCCESS',
+        taskId: updatedTask._id,
+        newStatus: updatedTask.status,
+        message: `Task status updated successfully to ${newStatus}.`
+      });
+    } catch (error: any) {
+      console.error('[Task Service Error] Status transition exception:', error);
+      return JSON.stringify({ status: 'ERROR', message: error.message });
+    }
+  }
 }
