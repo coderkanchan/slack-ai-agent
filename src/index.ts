@@ -21,16 +21,13 @@ slackApp.event('app_mention', async ({ event, client, say }) => {
     if (!event.user) return;
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
 
-    const loaderMessage = await client.chat.postMessage({
-      channel: event.channel,
-      text: `⚡ _VibeCheck Agent is typing..._`
-    });
+    const loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Interpreting workspace mention loops..._`);
 
-    await client.chat.update({
+    client.chat.update({
       channel: event.channel,
       ts: loaderMessage.ts as string,
-      text: `⏳ *Thinking Steps:*\n🔍 _Reading app workspace event context loops..._\n🧠 _Analyzing system queries via Groq (Llama 3.3)..._`
-    });
+      text: `⏳ *Thinking Steps:*\n🔍 _Reading database cluster configuration..._\n🧠 _Routing semantic matrices via Groq..._`
+    }).catch(err => console.error("Non-blocking UI shift failed:", err));
 
     const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
 
@@ -52,16 +49,13 @@ slackApp.message(async ({ message, client, say }) => {
 
       const channelId = message.channel;
 
-      const loaderMessage = await client.chat.postMessage({
-        channel: channelId,
-        text: `⚡ _VibeCheck Agent is typing..._`
-      });
+      const loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Establishing local communication node connections..._`);
 
-      await client.chat.update({
+      client.chat.update({
         channel: channelId,
         ts: loaderMessage.ts as string,
         text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._\n🧠 _Routing tool calling matrices via Groq..._`
-      });
+      }).catch(err => console.error("Non-blocking UI shift failed:", err));
 
       const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
