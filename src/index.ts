@@ -23,13 +23,13 @@ slackApp.event('app_mention', async ({ event, client, say }) => {
 
     const loaderMessage = await client.chat.postMessage({
       channel: event.channel,
-      text: `⏳ *Thinking Steps:*\n🔍 _Reading app workspace event context loops..._`
+      text: `⚡ _VibeCheck Agent is typing..._`
     });
 
     await client.chat.update({
       channel: event.channel,
       ts: loaderMessage.ts as string,
-      text: `⏳ *Thinking Steps:*\n🔍 _Searching Database... Done._\n🧠 _Analyzing system queries via Groq (Llama 3.3)..._`
+      text: `⏳ *Thinking Steps:*\n🔍 _Reading app workspace event context loops..._\n🧠 _Analyzing system queries via Groq (Llama 3.3)..._`
     });
 
     const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
@@ -50,21 +50,23 @@ slackApp.message(async ({ message, client, say }) => {
     if ('text' in message && message.text && !message.subtype) {
       if (!message.user) return;
 
+      const channelId = message.channel;
+
       const loaderMessage = await client.chat.postMessage({
-        channel: message.channel,
-        text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._`
+        channel: channelId,
+        text: `⚡ _VibeCheck Agent is typing..._`
       });
 
       await client.chat.update({
-        channel: message.channel,
+        channel: channelId,
         ts: loaderMessage.ts as string,
-        text: `⏳ *Thinking Steps:*\n🔍 _Interpreting semantic syntax blocks..._\n🧠 _Routing tool calling matrices via Groq..._`
+        text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._\n🧠 _Routing tool calling matrices via Groq..._`
       });
 
-      const reply = await groqService.getChatResponse(message.user, message.text.trim(), message.channel);
+      const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
       await client.chat.update({
-        channel: message.channel,
+        channel: channelId,
         ts: loaderMessage.ts as string,
         text: reply
       });
