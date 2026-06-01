@@ -17,11 +17,12 @@ startServer().catch((err) => {
 });
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
-  try {
-    if (!event.user) return;
-    const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
+  if (!event.user) return;
+  const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
 
-    const loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Interpreting workspace mention loops..._`);
+  let loaderMessage;
+  try {
+    loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Interpreting workspace mention loops..._`);
 
     client.chat.update({
       channel: event.channel,
@@ -37,36 +38,59 @@ slackApp.event('app_mention', async ({ event, client, say }) => {
       text: `Hello <@${event.user}>! ${reply}`
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Runtime Exception] Application mention stack error:', error);
+
+    if (loaderMessage?.ts) {
+      const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
+      await client.chat.update({
+        channel: event.channel,
+        ts: loaderMessage.ts as string,
+        text: isRateLimit
+          ? `⚠️ *VibeCheck System Alert:* AI Traffic Engine limits hit (Groq 429 Rate Limit). Please try again after a few minutes.`
+          : `⚠️ *VibeCheck System Alert:* Connection timeout. Please try resending your message.`
+      });
+    }
   }
 });
 
 slackApp.message(async ({ message, client, say }) => {
+  if (!('text' in message && message.text && !message.subtype)) return;
+  if (!message.user) return;
+
+  const channelId = message.channel;
+  let loaderMessage;
+
   try {
-    if ('text' in message && message.text && !message.subtype) {
-      if (!message.user) return;
+    loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Establishing local communication node connections..._`);
 
-      const channelId = message.channel;
+    client.chat.update({
+      channel: channelId,
+      ts: loaderMessage.ts as string,
+      text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._\n🧠 _Routing tool calling matrices via Groq..._`
+    }).catch(err => console.error("Non-blocking UI shift failed:", err));
 
-      const loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Establishing local communication node connections..._`);
+    const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
-      client.chat.update({
-        channel: channelId,
-        ts: loaderMessage.ts as string,
-        text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._\n🧠 _Routing tool calling matrices via Groq..._`
-      }).catch(err => console.error("Non-blocking UI shift failed:", err));
+    await client.chat.update({
+      channel: channelId,
+      ts: loaderMessage.ts as string,
+      text: reply
+    });
 
-      const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
+  } catch (error: any) {
+    console.error('[Runtime Exception] Direct Message stack error:', error);
 
+    if (loaderMessage?.ts) {
+      const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
       await client.chat.update({
         channel: channelId,
         ts: loaderMessage.ts as string,
-        text: reply
+        text: isRateLimit
+          ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
+          : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
       });
     }
-  } catch (error) {
-    console.error('[Runtime Exception] Direct Message stack error:', error);
   }
 });
 
