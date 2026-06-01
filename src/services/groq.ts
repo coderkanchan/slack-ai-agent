@@ -76,7 +76,7 @@ export class GroqService {
             5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`,
           },
         ];
-      } else {
+      } else if (this.memory[userId] && this.memory[userId][0]) {
         this.memory[userId][0].content = `You are an advanced corporate AI Orchestrator Agent inside Slack driven by Llama 3.3. 
         Your context: Current User ID is ${userId} and Current Channel ID is ${channelId}.
         ${userIdentityContext}
