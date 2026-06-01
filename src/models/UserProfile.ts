@@ -8,6 +8,7 @@ export interface IUserProfile extends Document {
 }
 
 const UserProfileSchema: Schema = new Schema(
+  
   {
     slackUserId: { type: String, required: true, unique: true, index: true },
     name: { type: String, default: '' }
