@@ -22,11 +22,13 @@
   "dependencies": {
     "@slack/bolt": "^4.7.3",
     "axios": "^1.16.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "groq-sdk": "^1.2.1",
     "mongoose": "^9.6.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^25.9.1",
     "nodemon": "^3.1.14",
