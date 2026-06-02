@@ -5,7 +5,6 @@ import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
 
-// TypeScript compile-time strict private checks bypass
 const rawApp: any = slackApp;
 const receiver = rawApp.receiver;
 
@@ -26,7 +25,6 @@ if (receiver && receiver.app) {
 
       const totalTasks = allTasks.length;
 
-      // Fixed: Mapped parameter 't' with explicit any type casting to prevent compilation friction
       const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
       const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
 
@@ -61,10 +59,6 @@ const startServer = async () => {
 startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
-
-// ==========================================
-// 🔴 NO TOUCH ZONE: ALL EXTANT SLACK INTERFACES PRESERVED 100%
-// ==========================================
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
