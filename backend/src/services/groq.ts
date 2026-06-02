@@ -1,5 +1,5 @@
 import { Groq } from 'groq-sdk';
-import { ChatMessage, ConversationMemory } from '../types/index.js';
+import { ConversationMemory } from '../types/index.js';
 import { SearchService } from './search.js';
 import { TaskService } from './task.js';
 import { UserProfile } from '../models/UserProfile.js';
