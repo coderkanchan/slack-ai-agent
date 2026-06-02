@@ -4,47 +4,49 @@ import { GroqService } from './services/groq.js';
 import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
-
 const rawApp: any = slackApp;
 const receiver = rawApp.receiver;
 
-if (receiver && receiver.app) {
-  receiver.app.use((req: any, res: any, next: any) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    next();
-  });
+if (receiver) {
+  const expressApp = receiver.app || (receiver.router ? receiver.router : null);
 
-  receiver.app.get('/api/dashboard/analytics', async (req: any, res: any) => {
-    try {
-      const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
+  if (expressApp && typeof expressApp.use === 'function') {
+    expressApp.use((req: any, res: any, next: any) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+      }
+      next();
+    });
 
-      const totalTasks = allTasks.length;
+    expressApp.get('/api/dashboard/analytics', async (req: any, res: any) => {
+      try {
+        const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
 
-      const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
-      const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
+        const totalTasks = allTasks.length;
+        const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
+        const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
 
-      const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+        const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
-      return res.status(200).json({
-        success: true,
-        metrics: {
-          totalTasks,
-          completedTasks,
-          pendingTasks,
-          activeVibeScore
-        },
-        tasks: allTasks
-      });
-    } catch (error) {
-      console.error('[Dashboard Endpoint Critical failure]:', error);
-      return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
-    }
-  });
+        return res.status(200).json({
+          success: true,
+          metrics: {
+            totalTasks,
+            completedTasks,
+            pendingTasks,
+            activeVibeScore
+          },
+          tasks: allTasks
+        });
+      } catch (error) {
+        console.error('[Dashboard Endpoint Critical failure]:', error);
+        return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
+      }
+    });
+  }
 }
 
 const startServer = async () => {
