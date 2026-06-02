@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MetricCards } from '../components/MetricCards';
-import { TaskRegistry } from '../components/TaskRegistry';
+import { MetricCards } from './components/MetricCards';
+import { TaskRegistry } from './components/TaskRegistry';
 
 interface DashboardData {
   metrics: {
@@ -24,7 +24,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Dynamic execution fetch pattern mapping across structural multi port routers
     fetch('http://localhost:3000/api/dashboard/analytics')
       .then((res) => res.json())
       .then((resData) => {
@@ -51,7 +50,6 @@ export default function Home() {
     <main className="flex min-h-screen flex-col bg-slate-950 text-slate-100 p-8 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
       <div className="max-w-7xl w-full mx-auto space-y-8">
 
-        {/* Modular High Profile Dashboard Header Block */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-6 gap-4">
           <div>
             <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400">
@@ -67,10 +65,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 1. Modular Metric Cards Section */}
         <MetricCards metrics={data?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 100 }} />
 
-        {/* 2. Modular Task Registry Section */}
         <TaskRegistry tasks={data?.tasks || []} />
 
       </div>
