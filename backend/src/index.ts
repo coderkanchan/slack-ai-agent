@@ -1,28 +1,15 @@
 import { slackApp } from './config/slack.js';
 import { connectDatabase } from './config/db.js';
 import { GroqService } from './services/groq.js';
-import { TaskModel } from './models/Task.js'; 
+import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
 
-const startServer = async () => {
-  await connectDatabase();
+const receiver = slackApp.receiver;
+const expressApp = receiver.app;
 
-  const port = process.env.PORT || 3000;
-
-  await slackApp.start(port);
-  console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
-};
-
-startServer().catch((err) => {
-  console.error('[Critical App Core Crash]:', err);
-});
-
-const rawApp: any = slackApp;
-const receiver = rawApp.receiver;
-
-if (receiver && receiver.app) {
-  receiver.app.use((req: any, res: any, next: any) => {
+if (expressApp) {
+  expressApp.use((req: any, res: any, next: any) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -32,13 +19,13 @@ if (receiver && receiver.app) {
     next();
   });
 
-  receiver.app.get('/api/dashboard/analytics', async (req: any, res: any) => {
+  expressApp.get('/api/dashboard/analytics', async (req: any, res: any) => {
     try {
       const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
 
       const totalTasks = allTasks.length;
-      const completedTasks = allTasks.filter(t => t.status === 'COMPLETED').length;
-      const pendingTasks = allTasks.filter(t => t.status === 'PENDING').length;
+      const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
+      const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
 
       const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
@@ -58,6 +45,19 @@ if (receiver && receiver.app) {
     }
   });
 }
+
+const startServer = async () => {
+  await connectDatabase();
+
+  const port = process.env.PORT || 5000;
+
+  await slackApp.start(port);
+  console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
+};
+
+startServer().catch((err) => {
+  console.error('[Critical App Core Crash]:', err);
+});
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
