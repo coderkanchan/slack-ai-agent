@@ -24,7 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/dashboard/analytics')
+    fetch('http://localhost:5000/api/dashboard/analytics') 
       .then((res) => res.json())
       .then((resData) => {
         if (resData.success) {
