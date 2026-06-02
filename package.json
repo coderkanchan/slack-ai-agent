@@ -7,7 +7,6 @@
     "dev:dashboard": "cd dashboard && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\""
   },
-  "dependencies": {},
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
