@@ -1,52 +1,52 @@
+import express from 'express';
+import cors from 'cors';
 import { slackApp } from './config/slack.js';
 import { connectDatabase } from './config/db.js';
 import { GroqService } from './services/groq.js';
 import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
-const rawApp: any = slackApp;
-const receiver = rawApp.receiver;
+const app = express();
 
-if (receiver) {
-  const expressApp = receiver.app || (receiver.router ? receiver.router : null);
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-  if (expressApp && typeof expressApp.use === 'function') {
-    expressApp.use((req: any, res: any, next: any) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-      }
-      next();
+app.use(express.json());
+
+app.get('/api/dashboard/analytics', async (req: any, res: any) => {
+  try {
+    const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
+
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
+    const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
+
+    const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+    return res.status(200).json({
+      success: true,
+      metrics: {
+        totalTasks,
+        completedTasks,
+        pendingTasks,
+        activeVibeScore
+      },
+      tasks: allTasks
     });
-
-    expressApp.get('/api/dashboard/analytics', async (req: any, res: any) => {
-      try {
-        const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
-
-        const totalTasks = allTasks.length;
-        const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
-        const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
-
-        const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
-
-        return res.status(200).json({
-          success: true,
-          metrics: {
-            totalTasks,
-            completedTasks,
-            pendingTasks,
-            activeVibeScore
-          },
-          tasks: allTasks
-        });
-      } catch (error) {
-        console.error('[Dashboard Endpoint Critical failure]:', error);
-        return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
-      }
-    });
+  } catch (error) {
+    console.error('[Dashboard Endpoint Critical failure]:', error);
+    return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
   }
+});
+
+const rawApp: any = slackApp;
+if (rawApp.receiver && typeof rawApp.receiver.requestListener === 'function') {
+  app.use('/slack/events', rawApp.receiver.requestListener());
+} else if (rawApp.receiver && rawApp.receiver.app) {
+  app.use('/slack/events', rawApp.receiver.app);
 }
 
 const startServer = async () => {
@@ -54,8 +54,9 @@ const startServer = async () => {
 
   const port = process.env.PORT || 5000;
 
-  await slackApp.start(port);
-  console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
+  app.listen(port, () => {
+    console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
+  });
 };
 
 startServer().catch((err) => {
