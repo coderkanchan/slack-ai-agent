@@ -5,11 +5,11 @@ import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
 
-const receiver = slackApp.receiver;
-const expressApp = receiver.app;
+const rawApp: any = slackApp;
+const receiver = rawApp.receiver;
 
-if (expressApp) {
-  expressApp.use((req: any, res: any, next: any) => {
+if (receiver && receiver.app) {
+  receiver.app.use((req: any, res: any, next: any) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -19,13 +19,13 @@ if (expressApp) {
     next();
   });
 
-  expressApp.get('/api/dashboard/analytics', async (req: any, res: any) => {
+  receiver.app.get('/api/dashboard/analytics', async (req: any, res: any) => {
     try {
       const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
 
       const totalTasks = allTasks.length;
-      const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
-      const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
+      const completedTasks = allTasks.filter(t => t.status === 'COMPLETED').length;
+      const pendingTasks = allTasks.filter(t => t.status === 'PENDING').length;
 
       const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
