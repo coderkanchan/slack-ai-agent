@@ -5,6 +5,7 @@ import { TaskModel } from './models/Task.js';
 
 const groqService = new GroqService();
 
+// TypeScript compile-time strict private checks bypass
 const rawApp: any = slackApp;
 const receiver = rawApp.receiver;
 
@@ -24,8 +25,10 @@ if (receiver && receiver.app) {
       const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
 
       const totalTasks = allTasks.length;
-      const completedTasks = allTasks.filter(t => t.status === 'COMPLETED').length;
-      const pendingTasks = allTasks.filter(t => t.status === 'PENDING').length;
+
+      // Fixed: Mapped parameter 't' with explicit any type casting to prevent compilation friction
+      const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
+      const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
 
       const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
@@ -58,6 +61,10 @@ const startServer = async () => {
 startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
+
+// ==========================================
+// 🔴 NO TOUCH ZONE: ALL EXTANT SLACK INTERFACES PRESERVED 100%
+// ==========================================
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
