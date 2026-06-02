@@ -1,6 +1,7 @@
 import { slackApp } from './config/slack.js';
 import { connectDatabase } from './config/db.js';
 import { GroqService } from './services/groq.js';
+import { TaskModel } from './models/Task.js'; 
 
 const groqService = new GroqService();
 
@@ -8,6 +9,7 @@ const startServer = async () => {
   await connectDatabase();
 
   const port = process.env.PORT || 3000;
+
   await slackApp.start(port);
   console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on port ${port}`);
 };
@@ -15,6 +17,45 @@ const startServer = async () => {
 startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
+
+const receiver = slackApp.receiver;
+if (receiver && receiver.app) {
+  receiver.app.use((req: any, res: any, next: any) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
+  receiver.app.get('/api/dashboard/analytics', async (req: any, res: any) => {
+    try {
+      const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
+
+      const totalTasks = allTasks.length;
+      const completedTasks = allTasks.filter(t => t.status === 'COMPLETED').length;
+      const pendingTasks = allTasks.filter(t => t.status === 'PENDING').length;
+
+      const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+      return res.status(200).json({
+        success: true,
+        metrics: {
+          totalTasks,
+          completedTasks,
+          pendingTasks,
+          activeVibeScore
+        },
+        tasks: allTasks
+      });
+    } catch (error) {
+      console.error('[Dashboard Endpoint Critical failure]:', error);
+      return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
+    }
+  });
+}
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
