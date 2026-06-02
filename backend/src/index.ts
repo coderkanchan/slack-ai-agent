@@ -18,7 +18,9 @@ startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
 
-const receiver = slackApp.receiver;
+const rawApp: any = slackApp;
+const receiver = rawApp.receiver;
+
 if (receiver && receiver.app) {
   receiver.app.use((req: any, res: any, next: any) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
