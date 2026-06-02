@@ -43,10 +43,8 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
 });
 
 const rawApp: any = slackApp;
-if (rawApp.receiver && typeof rawApp.receiver.requestListener === 'function') {
-  app.use('/slack/events', rawApp.receiver.requestListener());
-} else if (rawApp.receiver && rawApp.receiver.app) {
-  app.use('/slack/events', rawApp.receiver.app);
+if (rawApp.receiver && rawApp.receiver.router) {
+  app.use(rawApp.receiver.router);
 }
 
 const startServer = async () => {
