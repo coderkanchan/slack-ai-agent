@@ -14,6 +14,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Sahi badlaav: Slack middleware hamesha body parser (express.json) se PEHLE aana chahiye 
+// taaki request signatures sahi se verify ho sakein aur challenge error na aaye.
+app.use('/slack/events', (slackApp as any).receiver.app);
+
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
@@ -41,11 +45,6 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
     return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
   }
 });
-
-const rawApp: any = slackApp;
-if (rawApp.receiver && rawApp.receiver.router) {
-  app.use(rawApp.receiver.router);
-}
 
 const startServer = async () => {
   await connectDatabase();
