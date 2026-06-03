@@ -16,7 +16,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Safe Middleware Check: Agar kuch pass nahi ho pa rha, toh custom request dispatcher use karenge
 app.use('/slack/events', (req, res, next) => {
   const rawApp: any = slackApp;
   if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
