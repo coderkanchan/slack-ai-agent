@@ -14,7 +14,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
+app.use(express.json()); 
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
