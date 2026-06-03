@@ -14,14 +14,20 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-const rawApp: any = slackApp;
-if (rawApp.receiver && rawApp.receiver.router) {
-  app.use('/slack/events', rawApp.receiver.router);
-} else if (rawApp.receiver && rawApp.receiver.app) {
-  app.use('/slack/events', rawApp.receiver.app);
-}
-
 app.use(express.json());
+
+// Safe Middleware Check: Agar kuch pass nahi ho pa rha, toh custom request dispatcher use karenge
+app.use('/slack/events', (req, res, next) => {
+  const rawApp: any = slackApp;
+  if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
+    return rawApp.receiver.handle(req, res);
+  } else if (rawApp.receiver && rawApp.receiver.app && typeof rawApp.receiver.app === 'function') {
+    return rawApp.receiver.app(req, res);
+  } else if (rawApp.receiver && rawApp.receiver.router && typeof rawApp.receiver.router === 'function') {
+    return rawApp.receiver.router(req, res);
+  }
+  next();
+});
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
