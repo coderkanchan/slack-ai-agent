@@ -52,7 +52,7 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400">
+            <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-r from-emerald-400 via-teal-400 to-indigo-400">
               VibeCheck Enterprise Panel
             </h1>
             <p className="text-slate-400 text-sm mt-1 font-medium">
