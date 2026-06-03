@@ -14,7 +14,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use('/slack/events', (slackApp as any).receiver.app);
+// Sahi tareeka: Bolt handle karne ke liye pehle express routing check karta hai.
+// Agar aap ExpressReceiver use kar rahi hain toh .router middleware ka use hota hai.
+const rawApp: any = slackApp;
+if (rawApp.receiver && rawApp.receiver.router) {
+  app.use('/slack/events', rawApp.receiver.router);
+} else if (rawApp.receiver && rawApp.receiver.app) {
+  app.use('/slack/events', rawApp.receiver.app);
+}
 
 app.use(express.json());
 
