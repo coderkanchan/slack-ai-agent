@@ -14,15 +14,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- SLACK EVENETS CHALLENGE CORNERSTONE ---
-// Sabse pehle Slack events endpoint jahan raw url-verification handle hoga bina body-parsing conflicts ke.
 app.use('/slack/events', express.json(), (req, res, next) => {
-  // 1. Agar Slack dashboard se challenge (URL Verification) check ho rha hai:
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
-  // 2. Baki saare normal payloads Bolt App engine ko safety ke sath forward kar do:
   const rawApp: any = slackApp;
   if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
     return rawApp.receiver.handle(req, res);
@@ -34,7 +30,6 @@ app.use('/slack/events', express.json(), (req, res, next) => {
   next();
 });
 
-// Baki ke custom dashboard API endpoints ke liye json parser yahan aayega
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
