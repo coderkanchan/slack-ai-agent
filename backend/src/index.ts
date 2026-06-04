@@ -85,7 +85,6 @@ startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
 
-// App Mention Listener
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
   const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
