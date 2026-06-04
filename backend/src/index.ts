@@ -70,7 +70,6 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   }
 });
 
-// Server boot configuration
 const startServer = async () => {
   await connectDatabase();
 
