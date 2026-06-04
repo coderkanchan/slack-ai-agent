@@ -14,7 +14,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- CRITICAL FIX: Slack Event Router and Challenge Handler ---
 app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
