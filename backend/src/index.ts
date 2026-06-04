@@ -14,14 +14,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- ONLY UPDATED THIS INNER METHOD TO BYPASS 404/TIMEOUTS ---
 app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
-  // 1. URL Verification handle karne ke liye (Challenge check)
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
-  // 2. Bolt engine receiver ko event forward karein bina middleware blockage ke
   try {
     const rawApp: any = slackApp;
     if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
