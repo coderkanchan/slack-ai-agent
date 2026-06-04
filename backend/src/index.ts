@@ -14,19 +14,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- SLACK ENDPOINT (Bina Global JSON Parser Ke) ---
-// Slack verification aur events ko bina kisi middleware conflict ke handle karne ke liye:
 app.post('/slack/events', express.json({
   verify: (req: any, res, buf) => {
-    req.rawBody = buf; // Kuch Bolt configurations ko raw body chahiye hoti hai
   }
 }), (req, res, next) => {
-  // 1. Agar Slack dashboard se challenge check aa raha hai:
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
-  // 2. Baaki sab Bolt runner Engine ko handle karne ke liye de do:
   const rawApp: any = slackApp;
   if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
     return rawApp.receiver.handle(req, res);
@@ -38,7 +33,6 @@ app.post('/slack/events', express.json({
   next();
 });
 
-// Baki ke custom dashboard endpoints ke liye generic json parser niche aayega
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
