@@ -14,11 +14,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// --- CRITICAL FIX: Slack Event Router and Challenge Handler ---
 app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
+  // URL Verification (Slack Challenge handshake) bypass karne ke liye
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
+  // Bolt framework receiver ko request pass karne ke liye bridge logic
   try {
     const rawApp: any = slackApp;
     if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
@@ -32,7 +35,7 @@ app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
       return;
     }
   } catch (err) {
-    console.error("Slack receiver fallback bridge failure:", err);
+    console.error("Slack receiver bridge mismatch error:", err);
   }
 
   next();
@@ -40,6 +43,7 @@ app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
 
 app.use(express.json());
 
+// Dashboard Analytics API
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
@@ -66,6 +70,7 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   }
 });
 
+// Server boot configuration
 const startServer = async () => {
   await connectDatabase();
 
@@ -80,6 +85,7 @@ startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
 
+// App Mention Listener
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
   const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
@@ -118,6 +124,7 @@ slackApp.event('app_mention', async ({ event, client, say }) => {
   }
 });
 
+// Direct Message Listener
 slackApp.message(async ({ message, client, say }) => {
   if (!('text' in message && message.text && !message.subtype)) return;
   if (!message.user) return;
@@ -158,6 +165,7 @@ slackApp.message(async ({ message, client, say }) => {
   }
 });
 
+// Slash Command Listener
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
 
