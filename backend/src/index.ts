@@ -21,7 +21,6 @@ app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
-  // Bolt framework receiver ko request pass karne ke liye bridge logic
   try {
     const rawApp: any = slackApp;
     if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
