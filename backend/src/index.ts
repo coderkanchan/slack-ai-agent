@@ -43,7 +43,6 @@ app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
 
 app.use(express.json());
 
-// Dashboard Analytics API
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
