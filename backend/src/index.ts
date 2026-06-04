@@ -14,22 +14,30 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.post('/slack/events', express.json({
-  verify: (req: any, res, buf) => {
-  }
-}), (req, res, next) => {
+// --- ONLY UPDATED THIS INNER METHOD TO BYPASS 404/TIMEOUTS ---
+app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
+  // 1. URL Verification handle karne ke liye (Challenge check)
   if (req.body && req.body.type === 'url_verification') {
     return res.status(200).send({ challenge: req.body.challenge });
   }
 
-  const rawApp: any = slackApp;
-  if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
-    return rawApp.receiver.handle(req, res);
-  } else if (rawApp.receiver && rawApp.receiver.app && typeof rawApp.receiver.app === 'function') {
-    return rawApp.receiver.app(req, res);
-  } else if (rawApp.receiver && rawApp.receiver.router && typeof rawApp.receiver.router === 'function') {
-    return rawApp.receiver.router(req, res);
+  // 2. Bolt engine receiver ko event forward karein bina middleware blockage ke
+  try {
+    const rawApp: any = slackApp;
+    if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
+      await rawApp.receiver.handle(req, res);
+      return;
+    } else if (rawApp.receiver && rawApp.receiver.app && typeof rawApp.receiver.app === 'function') {
+      await rawApp.receiver.app(req, res);
+      return;
+    } else if (rawApp.receiver && rawApp.receiver.router && typeof rawApp.receiver.router === 'function') {
+      await rawApp.receiver.router(req, res);
+      return;
+    }
+  } catch (err) {
+    console.error("Slack receiver fallback bridge failure:", err);
   }
+
   next();
 });
 
