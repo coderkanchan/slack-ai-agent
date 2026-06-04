@@ -165,7 +165,6 @@ slackApp.message(async ({ message, client, say }) => {
   }
 });
 
-// Slash Command Listener
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
 
