@@ -124,7 +124,6 @@ slackApp.event('app_mention', async ({ event, client, say }) => {
   }
 });
 
-// Direct Message Listener
 slackApp.message(async ({ message, client, say }) => {
   if (!('text' in message && message.text && !message.subtype)) return;
   if (!message.user) return;
