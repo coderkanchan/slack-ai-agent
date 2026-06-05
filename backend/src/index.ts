@@ -45,7 +45,6 @@ if (boltReceiver && boltReceiver.router) {
 // 2. Generic JSON Middleware (Sirf non-slack/dashboard features ke liye)
 app.use(express.json());
 
-// 3. Dashboard Analytics Endpoint
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
