@@ -72,7 +72,6 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   }
 });
 
-// 4. Server Execution Pulse Start
 const startServer = async () => {
   await connectDatabase();
 
