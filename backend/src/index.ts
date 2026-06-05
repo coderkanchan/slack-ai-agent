@@ -42,7 +42,6 @@ if (boltReceiver && boltReceiver.router) {
   });
 }
 
-// 2. Generic JSON Middleware (Sirf non-slack/dashboard features ke liye)
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
