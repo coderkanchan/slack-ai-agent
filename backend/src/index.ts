@@ -8,38 +8,44 @@ import { TaskModel } from './models/Task.js';
 const groqService = new GroqService();
 const app = express();
 
+// 1. Production Standard CORS Config
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
-  if (req.body && req.body.type === 'url_verification') {
-    return res.status(200).send({ challenge: req.body.challenge });
-  }
-
-  try {
-    const rawApp: any = slackApp;
-    if (rawApp.receiver && typeof rawApp.receiver.handle === 'function') {
-      await rawApp.receiver.handle(req, res);
-      return;
-    } else if (rawApp.receiver && rawApp.receiver.app && typeof rawApp.receiver.app === 'function') {
-      await rawApp.receiver.app(req, res);
-      return;
-    } else if (rawApp.receiver && rawApp.receiver.router && typeof rawApp.receiver.router === 'function') {
-      await rawApp.receiver.router(req, res);
-      return;
+/**
+ * 🏢 PROFESSIONAL INDUSTRY STANDARD ROUTING (SLACK BINDING)
+ * Slack Bolt framework ka apna receiver router hota hai jo internally 
+ * URL Challenge Verification, Signature Parsing aur Security checks automatically handle karta hai.
+ * Note: Ise hamesha generic express.json() middleware ke upar (PEHLE) rakha jata hai.
+ */
+const boltReceiver = (slackApp as any).receiver;
+if (boltReceiver && boltReceiver.router) {
+  app.use('/slack/events', boltReceiver.router);
+} else {
+  // Ultra-Safe Fallback Middleware Bridge
+  app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
+    if (req.body && req.body.type === 'url_verification') {
+      return res.status(200).send({ challenge: req.body.challenge });
     }
-  } catch (err) {
-    console.error("Slack receiver bridge mismatch error:", err);
-  }
+    try {
+      if (boltReceiver && typeof boltReceiver.handle === 'function') {
+        await boltReceiver.handle(req, res);
+        return;
+      }
+    } catch (err) {
+      console.error("Slack receiver fallback pipeline failure:", err);
+    }
+    next();
+  });
+}
 
-  next();
-});
-
+// 2. Generic JSON Middleware (Sirf non-slack/dashboard features ke liye)
 app.use(express.json());
 
+// 3. Dashboard Analytics Endpoint
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
@@ -66,6 +72,7 @@ app.get('/api/dashboard/analytics', async (req: any, res: any) => {
   }
 });
 
+// 4. Server Execution Pulse Start
 const startServer = async () => {
   await connectDatabase();
 
@@ -79,6 +86,10 @@ const startServer = async () => {
 startServer().catch((err) => {
   console.error('[Critical App Core Crash]:', err);
 });
+
+// =========================================================================
+// 🤖 100% UNTOUCHED AI OPERATIONS & EVENT LISTENERS
+// =========================================================================
 
 slackApp.event('app_mention', async ({ event, client, say }) => {
   if (!event.user) return;
