@@ -25,7 +25,6 @@ const boltReceiver = (slackApp as any).receiver;
 if (boltReceiver && boltReceiver.router) {
   app.use('/slack/events', boltReceiver.router);
 } else {
-  // Ultra-Safe Fallback Middleware Bridge
   app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
     if (req.body && req.body.type === 'url_verification') {
       return res.status(200).send({ challenge: req.body.challenge });
