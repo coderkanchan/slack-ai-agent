@@ -15,12 +15,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-/**
- * 🏢 PROFESSIONAL INDUSTRY STANDARD ROUTING (SLACK BINDING)
- * Slack Bolt framework ka apna receiver router hota hai jo internally 
- * URL Challenge Verification, Signature Parsing aur Security checks automatically handle karta hai.
- * Note: Ise hamesha generic express.json() middleware ke upar (PEHLE) rakha jata hai.
- */
+
 const boltReceiver = (slackApp as any).receiver;
 if (boltReceiver && boltReceiver.router) {
   app.use('/slack/events', boltReceiver.router);
