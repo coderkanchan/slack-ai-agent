@@ -8,7 +8,6 @@ import { TaskModel } from './models/Task.js';
 const groqService = new GroqService();
 const app = express();
 
-// 1. Production Standard CORS Config
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
