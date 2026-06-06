@@ -21,7 +21,6 @@ app.use('/slack/events', slackRawBodyParser, slackRouter);
 // REST Downstream API Request Body Parsers
 app.use(express.json());
 
-// Main Infrastructure Diagnostics / UI Endpoints
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
