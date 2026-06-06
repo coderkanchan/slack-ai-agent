@@ -5,7 +5,6 @@ import { GroqService } from '../services/groq.js';
 const router = Router();
 const groqService = new GroqService();
 
-// Dedicated mount point matching receiver contract rules
 router.use('/', async (req, res, next) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
