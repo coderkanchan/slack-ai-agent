@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { slackApp } from '../config/slack.js'; 
+import { slackApp } from '../config/slack.js';
 import { GroqService } from '../services/groq.js';
 
 const router = Router();
 const groqService = new GroqService();
 
-router.use('/', async (req: any, res: any, next: any) => {
+router.post('/slack/events', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
     try {
@@ -18,7 +18,6 @@ router.use('/', async (req: any, res: any, next: any) => {
   }
   next();
 });
-
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
