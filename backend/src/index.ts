@@ -7,7 +7,6 @@ import { TaskModel } from './models/Task.js';
 
 const app = express();
 
-// Global Cross-Origin Middlewares Setup
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
