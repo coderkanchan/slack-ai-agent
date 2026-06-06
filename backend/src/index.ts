@@ -14,8 +14,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- ISOLATED MIDDLEWARE INTERCEPTION ROUTING GRID ---
-// Is route par express.json() generic state execute nahi honi chahiye
 app.use('/slack/events', slackRawBodyParser, slackRouter);
 
 app.use(express.json());
