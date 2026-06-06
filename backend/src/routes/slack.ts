@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { slackApp } from '../config/slack.js'; // Explicit direct .ts extension targeting
+import { slackApp } from '../config/slack.js'; 
 import { GroqService } from '../services/groq.js';
 
 const router = Router();
@@ -19,7 +19,6 @@ router.use('/', async (req: any, res: any, next: any) => {
   next();
 });
 
-// --- WORKSPACE LISTENERS & FEATURE LOGIC ---
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
