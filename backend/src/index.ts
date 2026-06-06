@@ -25,7 +25,6 @@ app.use('/slack/events', (req, res, next) => {
   }
 });
 
-// Baki saare normal JSON API requests ke liye body parser niche rahega
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
