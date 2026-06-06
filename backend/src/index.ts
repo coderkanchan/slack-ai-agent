@@ -15,7 +15,6 @@ app.use(cors({
 }));
 
 // --- SLACK MIDDLEWARE CRITICAL FIX ---
-// Is route ko express.json() middleware se upar rakhna zaroori hai taaki Bolt raw body read kar sake
 app.use('/slack/events', (req, res, next) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
