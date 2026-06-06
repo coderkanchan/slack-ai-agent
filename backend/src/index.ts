@@ -18,7 +18,6 @@ app.use(cors({
 // Is route par express.json() generic state execute nahi honi chahiye
 app.use('/slack/events', slackRawBodyParser, slackRouter);
 
-// REST Downstream API Request Body Parsers
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
