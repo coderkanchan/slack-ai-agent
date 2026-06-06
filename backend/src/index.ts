@@ -14,7 +14,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// --- SLACK MIDDLEWARE CRITICAL FIX ---
 app.use('/slack/events', (req, res, next) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
