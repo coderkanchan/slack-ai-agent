@@ -19,7 +19,6 @@ router.use('/', async (req, res, next) => {
   next();
 });
 
-// All Feature Listeners remain clean and contained
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   // ... (Aapka existing /vibecheck ui configuration block code)
