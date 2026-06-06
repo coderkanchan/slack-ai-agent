@@ -14,27 +14,18 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
-const boltReceiver = (slackApp as any).receiver;
-if (boltReceiver && boltReceiver.router) {
-  app.use('/slack/events', boltReceiver.router);
-} else {
-  app.post('/slack/events', express.json(), async (req: any, res: any, next) => {
-    if (req.body && req.body.type === 'url_verification') {
-      return res.status(200).send({ challenge: req.body.challenge });
-    }
-    try {
-      if (boltReceiver && typeof boltReceiver.handle === 'function') {
-        await boltReceiver.handle(req, res);
-        return;
-      }
-    } catch (err) {
-      console.error("Slack receiver fallback pipeline failure:", err);
-    }
+// --- SLACK MIDDLEWARE CRITICAL FIX ---
+// Is route ko express.json() middleware se upar rakhna zaroori hai taaki Bolt raw body read kar sake
+app.use('/slack/events', (req, res, next) => {
+  const receiver = (slackApp as any).receiver;
+  if (receiver && typeof receiver.handle === 'function') {
+    receiver.handle(req, res);
+  } else {
     next();
-  });
-}
+  }
+});
 
+// Baki saare normal JSON API requests ke liye body parser niche rahega
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: any, res: any) => {
