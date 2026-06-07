@@ -1,23 +1,9 @@
-import { Router } from 'express';
 import { slackApp } from '../config/slack.js';
 import { GroqService } from '../services/groq.js';
 
-const router = Router();
 const groqService = new GroqService();
-  
-router.post('/', async (req: any, res: any, next: any) => {
-  const receiver = (slackApp as any).receiver;
-  if (receiver && typeof receiver.handle === 'function') {
-    try {
-      await receiver.handle(req, res);
-      return;
-    } catch (err) {
-      console.error("Slack event error:", err);
-      return res.status(500).send();
-    }
-  }
-  next();
-});
+
+// --- DIRECT BOT LISTENERS REGISTRATION ---
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
@@ -136,5 +122,3 @@ slackApp.message(async ({ message, client, say }) => {
     }
   }
 });
-
-export { router as slackRouter };
