@@ -19,7 +19,6 @@ router.post('/slack/events', async (req: any, res: any, next: any) => {
   next();
 });
 
-export default router;
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
