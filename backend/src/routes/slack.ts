@@ -5,7 +5,8 @@ import { GroqService } from '../services/groq.js';
 const router = Router();
 const groqService = new GroqService();
 
-router.post('/slack/events', async (req: any, res: any, next: any) => {
+// YAHAN BADLAV HAI: Internal root receiver matching the express base middleware pattern
+router.post('/', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
     try {
@@ -18,6 +19,8 @@ router.post('/slack/events', async (req: any, res: any, next: any) => {
   }
   next();
 });
+
+// --- SLACK BOT FEATURES AND AI AGENT LISTENERS ---
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
@@ -33,11 +36,7 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
       blocks: [
         {
           type: 'header',
-          text: {
-            type: 'plain_text',
-            text: '📊 Workspace VibeCheck Diagnostic',
-            emoji: true
-          }
+          text: { type: 'plain_text', text: '📊 Workspace VibeCheck Diagnostic', emoji: true }
         },
         { type: 'divider' },
         {
