@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
-import { slackApp } from './config/slack.js'; // Direct Slack App Import
+import { slackApp } from './config/slack.js'; 
 import './routes/slack.js'; // Force execute all slack command/message listeners
 import { TaskModel } from './models/Task.js';
 
