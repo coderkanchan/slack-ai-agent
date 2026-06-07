@@ -3,7 +3,7 @@ import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
 import { slackApp } from './config/slack.js'; 
-import './routes/slack.js'; // Force execute all slack command/message listeners
+import './routes/slack.js'; 
 import { TaskModel } from './models/Task.js';
 
 const app = express();
