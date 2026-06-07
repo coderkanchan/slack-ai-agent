@@ -74,9 +74,11 @@ app.get('/api/dashboard/analytics', async (req, res) => {
 
 const startServer = async () => {
   await connectDatabase();
-  const port = process.env.PORT || 5000;
-  app.listen(port, () => {
-    console.log(`🚀 [Server Boot] Core System online on port ${port}`);
+  const port = Number(process.env.PORT) || 5000;
+
+  // Explicitly binding to 0.0.0.0 to catch both IPv4 and IPv6 ngrok signals cleanly
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 [Server Boot] Core System online on explicit interface 0.0.0.0:${port}`);
   });
 };
 
