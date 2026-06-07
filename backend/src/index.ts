@@ -2,18 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
-import { slackApp } from './config/slack.js'; 
-import './routes/slack.js'; 
+import { slackApp } from './config/slack.js';
+import './routes/slack.js';
 import { TaskModel } from './models/Task.js';
 
 const app = express();
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+// RULE 1: Slack verification needs raw parser before any other middleware handles payload context
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
@@ -27,6 +22,12 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   }
   return res.status(404).send('Slack receiver not initialized');
 });
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 
