@@ -48,8 +48,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-// --- CORE TUNNEL GATEWAY ---
-// Checking signatures and processing immediate execution responses
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
@@ -64,7 +62,6 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   return res.status(404).send('Slack receiver not found');
 });
 
-// Standard dashboard utility fallbacks
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 app.use(express.json());
 
