@@ -3,8 +3,6 @@ import { GroqService } from '../services/groq.js';
 
 const groqService = new GroqService();
 
-// --- DIRECT BOT LISTENERS REGISTRATION ---
-
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
