@@ -8,7 +8,6 @@ import { TaskModel } from './models/Task.js';
 
 const app = express();
 
-// RULE 1: Slack verification needs raw parser before any other middleware handles payload context
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
