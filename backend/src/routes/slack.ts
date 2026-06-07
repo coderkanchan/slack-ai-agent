@@ -5,7 +5,6 @@ import { GroqService } from '../services/groq.js';
 const router = Router();
 const groqService = new GroqService();
 
-// YAHAN BADLAV HAI: Internal root receiver matching the express base middleware pattern
 router.post('/', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
