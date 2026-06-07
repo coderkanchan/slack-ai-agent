@@ -13,29 +13,23 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(slackRawBodyParser); 
-app.use(slackRouter);
+// YAHAN BADLAV HAI: Explicitly catch matching slack event endpoint grid here!
+app.use('/slack/events', slackRawBodyParser, slackRouter);
 
+// Global downstream body parse handling
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
-
     const totalTasks = allTasks.length;
     const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
     const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
-
     const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
     return res.status(200).json({
       success: true,
-      metrics: {
-        totalTasks,
-        completedTasks,
-        pendingTasks,
-        activeVibeScore
-      },
+      metrics: { totalTasks, completedTasks, pendingTasks, activeVibeScore },
       tasks: allTasks
     });
   } catch (error) {
