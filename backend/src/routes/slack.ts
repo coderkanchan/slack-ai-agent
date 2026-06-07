@@ -4,7 +4,7 @@ import { GroqService } from '../services/groq.js';
 
 const router = Router();
 const groqService = new GroqService();
-
+  
 router.post('/', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {

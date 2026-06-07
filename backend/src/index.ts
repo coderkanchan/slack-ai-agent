@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
-import { slackRouter } from './routes/slack.js';
+import { slackApp } from './config/slack.js'; // Direct Slack App Import
+import './routes/slack.js'; // Force execute all slack command/message listeners
 import { TaskModel } from './models/Task.js';
 
 const app = express();
@@ -13,8 +14,22 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use('/slack/events', slackRawBodyParser, slackRouter);
+// GLOBAL DIRECT MOUNTING: No intermediate router trap!
+app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
+  const receiver = (slackApp as any).receiver;
+  if (receiver && typeof receiver.handle === 'function') {
+    try {
+      await receiver.handle(req, res);
+      return;
+    } catch (err) {
+      console.error("[Index Direct Slack Core Failure]:", err);
+      return res.status(500).send();
+    }
+  }
+  return res.status(404).send('Slack receiver not initialized');
+});
 
+// Generic JSON body parsers for dashboard APIs safely placed below
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
