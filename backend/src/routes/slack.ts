@@ -5,7 +5,6 @@ import { GroqService } from '../services/groq.js';
 const router = Router();
 const groqService = new GroqService();
 
-// 1. Handling the main endpoint routing
 router.post('/slack/events', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
