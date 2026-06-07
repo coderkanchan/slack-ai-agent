@@ -20,8 +20,6 @@ router.post('/', async (req: any, res: any, next: any) => {
   next();
 });
 
-// --- SLACK BOT FEATURES AND AI AGENT LISTENERS ---
-
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
