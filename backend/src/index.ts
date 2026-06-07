@@ -9,8 +9,6 @@ import { GroqService } from './services/groq.js';
 const app = express();
 const groqService = new GroqService();
 
-// --- FORCE MANIFEST INITIALIZATION FOR LISTENERS ---
-// Directly registering the /vibecheck pulse command inside core memory line
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
