@@ -20,7 +20,6 @@ router.post('/slack/events', async (req: any, res: any, next: any) => {
   next();
 });
 
-// 2. Slack Listeners & Features
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
