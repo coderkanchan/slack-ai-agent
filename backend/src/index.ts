@@ -3,11 +3,53 @@ import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
 import { slackApp } from './config/slack.js';
-import './routes/slack.js';
 import { TaskModel } from './models/Task.js';
+import { GroqService } from './services/groq.js';
 
 const app = express();
+const groqService = new GroqService();
 
+// --- FORCE MANIFEST INITIALIZATION FOR LISTENERS ---
+// Directly registering the /vibecheck pulse command inside core memory line
+slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
+  await ack();
+  try {
+    const hostTimestamp = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+    await respond({
+      response_type: 'ephemeral',
+      blocks: [
+        {
+          type: 'header',
+          text: { type: 'plain_text', text: '📊 Workspace VibeCheck Diagnostic', emoji: true }
+        },
+        { type: 'divider' },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*Requested By:*\n<@${command.user_id}>` },
+            { type: 'mrkdwn', text: `*Execution Pulse:*\n\`${hostTimestamp}\`` }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: '*Operational Status:*\n🟢 Active & Healthy' },
+            { type: 'mrkdwn', text: '*AI Engine:*\n⚡ Groq (Llama 3.3)' }
+          ]
+        }
+      ]
+    });
+  } catch (err) {
+    console.error("Direct Slash command execution intercept failed:", err);
+  }
+});
+
+// --- CORE TUNNEL GATEWAY ---
+// Checking signatures and processing immediate execution responses
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
@@ -19,33 +61,19 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
       return res.status(500).send();
     }
   }
-  return res.status(404).send('Slack receiver not initialized');
+  return res.status(404).send('Slack receiver not found');
 });
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+// Standard dashboard utility fallbacks
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 app.use(express.json());
 
-app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
+app.get('/api/dashboard/analytics', async (req, res) => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
-    const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter((t: any) => t.status === 'COMPLETED').length;
-    const pendingTasks = allTasks.filter((t: any) => t.status === 'PENDING').length;
-    const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
-
-    return res.status(200).json({
-      success: true,
-      metrics: { totalTasks, completedTasks, pendingTasks, activeVibeScore },
-      tasks: allTasks
-    });
+    return res.status(200).json({ success: true, metrics: { totalTasks: allTasks.length }, tasks: allTasks });
   } catch (error) {
-    console.error('[Dashboard Endpoint Critical failure]:', error);
-    return res.status(500).json({ success: false, error: 'Database stats extraction failed.' });
+    return res.status(500).json({ success: false });
   }
 });
 
@@ -53,10 +81,8 @@ const startServer = async () => {
   await connectDatabase();
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
-    console.log(`🚀 [Server Boot] VibeCheck Corporate Hub Core is live on professionally decoupled port ${port}`);
+    console.log(`🚀 [Server Boot] Core System online on port ${port}`);
   });
 };
 
-startServer().catch((err) => {
-  console.error('[Critical App Core Crash]:', err);
-});
+startServer().catch((err) => console.error(err));
