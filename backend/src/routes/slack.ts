@@ -5,6 +5,7 @@ import { GroqService } from '../services/groq.js';
 const router = Router();
 const groqService = new GroqService();
 
+// 1. Handling the main endpoint routing
 router.post('/slack/events', async (req: any, res: any, next: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
@@ -19,6 +20,7 @@ router.post('/slack/events', async (req: any, res: any, next: any) => {
   next();
 });
 
+// 2. Slack Listeners & Features
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
@@ -141,4 +143,5 @@ slackApp.message(async ({ message, client, say }) => {
   }
 });
 
+// 3. Exporting at the very end
 export { router as slackRouter };
