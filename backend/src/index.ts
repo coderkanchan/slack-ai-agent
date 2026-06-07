@@ -14,7 +14,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// GLOBAL DIRECT MOUNTING: No intermediate router trap!
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
   if (receiver && typeof receiver.handle === 'function') {
