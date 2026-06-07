@@ -12,13 +12,14 @@ router.post('/slack/events', async (req: any, res: any, next: any) => {
       await receiver.handle(req, res);
       return;
     } catch (err) {
-      console.error("[Slack Routing Critical Failure]:", err);
+      console.error("Slack event error:", err);
       return res.status(500).send();
     }
   }
   next();
 });
 
+export default router;
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
