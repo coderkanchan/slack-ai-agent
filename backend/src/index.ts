@@ -28,7 +28,6 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   return res.status(404).send('Slack receiver not initialized');
 });
 
-// Generic JSON body parsers for dashboard APIs safely placed below
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
