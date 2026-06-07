@@ -143,5 +143,4 @@ slackApp.message(async ({ message, client, say }) => {
   }
 });
 
-// 3. Exporting at the very end
 export { router as slackRouter };
