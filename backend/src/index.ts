@@ -13,7 +13,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use('/slack/events', slackRawBodyParser, slackRouter);
+app.use(slackRawBodyParser); 
+app.use(slackRouter);
 
 app.use(express.json());
 
