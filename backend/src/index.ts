@@ -13,10 +13,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// YAHAN BADLAV HAI: Explicitly catch matching slack event endpoint grid here!
 app.use('/slack/events', slackRawBodyParser, slackRouter);
 
-// Global downstream body parse handling
 app.use(express.json());
 
 app.get('/api/dashboard/analytics', async (req: express.Request, res: express.Response) => {
