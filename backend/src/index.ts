@@ -51,7 +51,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
-// 6. Server Boot Binding
 const startServer = async () => {
   try {
     await connectDatabase();
