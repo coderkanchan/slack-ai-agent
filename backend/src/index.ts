@@ -15,7 +15,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Register Bolt Slash Command Command
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   console.log("⚡ Vibecheck command triggered by user:", command.user_name);
