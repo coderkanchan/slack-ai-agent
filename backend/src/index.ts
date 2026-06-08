@@ -41,7 +41,6 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   return res.status(404).send('Slack receiver instance missing');
 });
 
-// Standard backup check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
