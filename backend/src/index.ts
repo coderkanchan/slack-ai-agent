@@ -60,7 +60,6 @@ const startServer = async () => {
   try {
     await connectDatabase();
     const port = 5000;
-    // Binding to '0.0.0.0' allows both localhost and 127.0.0.1 to handshake seamlessly
     app.listen(port, '0.0.0.0', () => {
       console.log(`🚀 [Server Boot] Core Engine listening smoothly on port ${port}`);
     });
