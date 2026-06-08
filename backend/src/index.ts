@@ -44,7 +44,6 @@ app.post('/slack/events', slackRawBodyParser, (req: any, res: any) => {
   }
 });
 
-// 5. Standard json parsing parser (Sirf baaki routes ke liye, Slack ke baad)
 app.use(express.json());
 
 app.get('/health', (req, res) => {
