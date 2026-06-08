@@ -57,7 +57,6 @@ const startServer = async () => {
     await connectDatabase();
     const port = 5000;
 
-    // Hamne isko '127.0.0.1' par force bind kar diya hai taaki ngrok se handshake ho sake
     app.listen(port, '127.0.0.1', () => {
       console.log(`🚀 [Server Boot] Clean Diagnostic core running on http://127.0.0.1:${port}`);
     });
