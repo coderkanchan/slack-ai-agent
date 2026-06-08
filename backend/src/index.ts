@@ -6,55 +6,66 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
+// Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
+// Request Logger
 app.use((req, res, next) => {
-  console.log(`📡 [Incoming Request]: ${req.method} ${req.url}`);
+  console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
 });
 
+// Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
-  console.log("⚡ Vibecheck command triggered by user:", command.user_name);
-  await respond({
-    response_type: 'ephemeral',
-    text: `🟢 Connection Successful! Server is responding cleanly to /vibecheck.`
-  });
-});
-
-app.post('/slack/events', slackRawBodyParser, (req: any, res: any) => {
-  console.log("📥 Passing execution directly to Bolt framework router...");
-  const receiver = (slackApp as any).receiver;
-
-  if (receiver && typeof receiver.router === 'function') {
-    receiver.router(req, res);
-  } else if (receiver && typeof receiver.handle === 'function') {
-    receiver.handle(req, res).catch((err: any) => {
-      console.error("❌ Bolt receiver execution failure:", err);
-      res.status(500).send();
+  console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
+  try {
+    await respond({
+      response_type: 'ephemeral',
+      text: `🟢 Connection 100% Successful! Your Slack Bot is now fully linked with the Local Engine.`
     });
-  } else {
-    console.error("❌ Slack Receiver instance setup is invalid");
-    res.status(404).send('Slack receiver instance missing');
+  } catch (err) {
+    console.error("Error sending message back to Slack:", err);
   }
 });
 
+// Slack Main Routing Endpoint Mapping
+app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
+  console.log("📥 Forwarding current payload to Slack Bolt Core Framework...");
+  const receiver = (slackApp as any).receiver;
+  if (receiver) {
+    if (typeof receiver.router === 'function') {
+      return receiver.router(req, res);
+    } else if (typeof receiver.handle === 'function') {
+      try {
+        await receiver.handle(req, res);
+        return;
+      } catch (err) {
+        console.error("Bolt execution engine crashed:", err);
+        return res.status(500).send();
+      }
+    }
+  }
+  return res.status(404).send('Slack Receiver interface context not found');
+});
+
+// Post-Slack Parsers for normal routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: "healthy" });
+  res.status(200).json({ status: "online", gateway: "verified" });
 });
 
 const startServer = async () => {
   try {
     await connectDatabase();
     const port = 5000;
-
-    app.listen(port, '127.0.0.1', () => {
-      console.log(`🚀 [Server Boot] Clean Diagnostic core running on http://127.0.0.1:${port}`);
+    // Binding to '0.0.0.0' allows both localhost and 127.0.0.1 to handshake seamlessly
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`🚀 [Server Boot] Core Engine listening smoothly on port ${port}`);
     });
   } catch (error) {
-    console.error("Database connection failure during boot:", error);
+    console.error("Database initialization failed:", error);
   }
 };
 
