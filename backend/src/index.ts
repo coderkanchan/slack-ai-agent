@@ -6,7 +6,6 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
-// Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
 app.use((req, res, next) => {
