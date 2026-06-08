@@ -25,7 +25,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   });
 });
 
-// 4. FIXED Slack Events Endpoint (Yahan handle ki jagah direct receiver.router chalega)
 app.post('/slack/events', slackRawBodyParser, (req: any, res: any) => {
   console.log("📥 Passing execution directly to Bolt framework router...");
   const receiver = (slackApp as any).receiver;
