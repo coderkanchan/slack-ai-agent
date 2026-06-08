@@ -29,7 +29,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-// Slack Main Routing Endpoint Mapping
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   console.log("📥 Forwarding current payload to Slack Bolt Core Framework...");
   const receiver = (slackApp as any).receiver;
