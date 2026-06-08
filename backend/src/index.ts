@@ -15,7 +15,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. Slack Command Registration (Isko Bolt internally store karega)
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   console.log("⚡ Vibecheck command triggered by user:", command.user_name);
