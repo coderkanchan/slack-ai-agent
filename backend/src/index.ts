@@ -9,7 +9,6 @@ const app = express();
 // Enable CORS
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
-// 1. Debugging Middleware: Yeh terminal mein print karega jab bhi koi request aayegi
 app.use((req, res, next) => {
   console.log(`📡 [Incoming Request]: ${req.method} ${req.url}`);
   next();
