@@ -6,10 +6,8 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
-// 1. CORS Configuration
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
-// 2. Global Logging Middleware (Jo terminal mein print kar raha hai)
 app.use((req, res, next) => {
   console.log(`📡 [Incoming Request]: ${req.method} ${req.url}`);
   next();
