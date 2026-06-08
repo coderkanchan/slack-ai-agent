@@ -6,13 +6,16 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
+// 1. CORS Configuration
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
+// 2. Global Logging Middleware (Jo terminal mein print kar raha hai)
 app.use((req, res, next) => {
   console.log(`📡 [Incoming Request]: ${req.method} ${req.url}`);
   next();
 });
 
+// 3. Slack Command Registration (Isko Bolt internally store karega)
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   console.log("⚡ Vibecheck command triggered by user:", command.user_name);
@@ -22,31 +25,41 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   });
 });
 
-app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
-  console.log("📥 /slack/events endpoint hit by Ngrok!");
+// 4. FIXED Slack Events Endpoint (Yahan handle ki jagah direct receiver.router chalega)
+app.post('/slack/events', slackRawBodyParser, (req: any, res: any) => {
+  console.log("📥 Passing execution directly to Bolt framework router...");
   const receiver = (slackApp as any).receiver;
-  if (receiver && typeof receiver.handle === 'function') {
-    try {
-      await receiver.handle(req, res);
-      return;
-    } catch (err) {
-      console.error("❌ Bolt receiver internal handling crash:", err);
-      return res.status(500).send();
-    }
+
+  if (receiver && typeof receiver.router === 'function') {
+    // Bolt ka internal routing mechanism handle karega signatures aur commands ko
+    receiver.router(req, res);
+  } else if (receiver && typeof receiver.handle === 'function') {
+    receiver.handle(req, res).catch((err: any) => {
+      console.error("❌ Bolt receiver execution failure:", err);
+      res.status(500).send();
+    });
+  } else {
+    console.error("❌ Slack Receiver instance setup is invalid");
+    res.status(404).send('Slack receiver instance missing');
   }
-  return res.status(404).send('Slack receiver instance missing');
 });
+
+// 5. Standard json parsing parser (Sirf baaki routes ke liye, Slack ke baad)
+app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
+// 6. Server Boot Binding
 const startServer = async () => {
   try {
     await connectDatabase();
     const port = 5000;
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`🚀 [Server Boot] Clean Diagnostic core running on port ${port}`);
+
+    // Hamne isko '127.0.0.1' par force bind kar diya hai taaki ngrok se handshake ho sake
+    app.listen(port, '127.0.0.1', () => {
+      console.log(`🚀 [Server Boot] Clean Diagnostic core running on http://127.0.0.1:${port}`);
     });
   } catch (error) {
     console.error("Database connection failure during boot:", error);
