@@ -31,7 +31,6 @@ app.post('/slack/events', slackRawBodyParser, (req: any, res: any) => {
   const receiver = (slackApp as any).receiver;
 
   if (receiver && typeof receiver.router === 'function') {
-    // Bolt ka internal routing mechanism handle karega signatures aur commands ko
     receiver.router(req, res);
   } else if (receiver && typeof receiver.handle === 'function') {
     receiver.handle(req, res).catch((err: any) => {
