@@ -25,7 +25,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   });
 });
 
-// 2. Catch-all Slack Events Endpoint with explicit debugging log
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   console.log("📥 /slack/events endpoint hit by Ngrok!");
   const receiver = (slackApp as any).receiver;
