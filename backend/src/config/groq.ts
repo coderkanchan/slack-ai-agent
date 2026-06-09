@@ -28,7 +28,7 @@ export const generateAIResponse = async (prompt: string): Promise<string> => {
           content: prompt,
         },
       ],
-      model: 'llama3-8b-8192', // Super fast and free-tier optimized model
+      model: 'llama3-8b-8192', 
       temperature: 0.7,
     });
 
