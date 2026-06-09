@@ -18,7 +18,6 @@ app.use((req, res, next) => {
 // Yeh Bolt ke internal express instance ko bina kisi context delay ke connect karega
 app.use(slackApp.receiver.router);
 
-// 4. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
   try {
