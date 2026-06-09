@@ -5,17 +5,13 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
-// 1. Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
-// 2. Request Logger for Tunnels
 app.use((req, res, next) => {
   console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
 });
 
-// 3. FIXED: Mount Slack Receiver Router with Explicit Type Casting
-// (slackApp as any) use karne se TypeScript ka type mismatch error completely solve ho jayega
 if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router) {
   app.use((slackApp as any).receiver.router);
 } else {
