@@ -15,7 +15,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
