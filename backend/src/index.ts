@@ -32,7 +32,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-// 5. Post-Slack Parsers for other routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
