@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackApp } from './config/slack.js';
-import { generateAIResponse } from './config/groq.js'; 
+import { generateAIResponse } from './config/groq.js';
 
 const app = express();
 
@@ -20,6 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
+
   await ack();
 
   const userPrompt = command.text;
@@ -33,17 +34,26 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
+  await respond({
+    response_type: 'in_channel',
+    text: `⏳ *VibeCheck-Bot is thinking...* \n_\`Processing: ${userPrompt}\`_\n` +
+      `• _Analyzing prompt..._\n• _Fetching insights from Groq Cloud..._`
+  });
+
   try {
     const aiAnswer = await generateAIResponse(userPrompt);
 
     await respond({
-      response_type: 'in_channel', 
+      response_type: 'in_channel',
+      replace_original: true, 
       text: `*🤖 AI Agent Response to "${userPrompt}":*\n\n${aiAnswer}`
     });
+
   } catch (err) {
     console.error("Error processing /ask-ai command:", err);
     await respond({
       response_type: 'ephemeral',
+      replace_original: true,
       text: '❌ Oops! Something went wrong while connecting to the AI engine.'
     });
   }
