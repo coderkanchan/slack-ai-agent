@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackApp } from './config/slack.js';
-import { generateAIResponse } from './config/groq.js'; // Groq helper import kiya
+import { generateAIResponse } from './config/groq.js'; 
 
 const app = express();
 
@@ -19,7 +19,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
   console.error("❌ Critical: Slack Receiver Router instance is missing!");
 }
 
-// 🔥 NEW: Real-Time AI Slash Command
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   await ack();
 
