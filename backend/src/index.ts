@@ -39,9 +39,8 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     // 2. Fetch lightning-fast response from Groq Cloud
     const aiAnswer = await generateAIResponse(userPrompt);
 
-    // 3. Send the answer back to the user in Slack
     await respond({
-      response_type: 'in_channel', // 'in_channel' se sabhi ko dikhega, 'ephemeral' se sirf use jisne pucha
+      response_type: 'in_channel', 
       text: `*🤖 AI Agent Response to "${userPrompt}":*\n\n${aiAnswer}`
     });
   } catch (err) {
