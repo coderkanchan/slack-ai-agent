@@ -36,7 +36,6 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
 
   if (receiver) {
     try {
-      // Is method se Bolt framework internal router arguments crash (Callback Required) se bach jata hai
       await receiver.requestHandler(req, res);
       return;
     } catch (err) {
