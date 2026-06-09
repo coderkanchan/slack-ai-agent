@@ -47,7 +47,6 @@ app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   return res.status(404).send('Slack Receiver interface context not found');
 });
 
-// 5. Post-Slack Parsers for normal routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
