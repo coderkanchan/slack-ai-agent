@@ -22,7 +22,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
   console.error("❌ Critical: Slack Receiver Router instance is missing!");
 }
 
-// 4. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack(); 
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
