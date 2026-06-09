@@ -1,20 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
-import { slackRawBodyParser } from './middlewares/slackBodyParser.js';
 import { slackApp } from './config/slack.js';
 
 const app = express();
 
+// 1. Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
+// 2. Request Logger for Tunnels
 app.use((req, res, next) => {
   console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
 });
 
+// 3. FIXED: Mount Slack Receiver Router directly as Middleware
+// Yeh Bolt ke internal express instance ko bina kisi context delay ke connect karega
+app.use(slackApp.receiver.router);
+
+// 4. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
-  await ack();
+  await ack(); // Instantly acknowledges to prevent the 3-second timeout!
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
   try {
     await respond({
@@ -26,22 +32,7 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
-  console.log("📥 Forwarding current payload to Slack Bolt Core Framework...");
-  const receiver = (slackApp as any).receiver;
-
-  if (receiver) {
-    try {
-      await receiver.requestHandler(req, res);
-      return;
-    } catch (err) {
-      console.error("Bolt execution engine requestHandler crashed:", err);
-      return res.status(500).send();
-    }
-  }
-  return res.status(404).send('Slack Receiver interface context not found');
-});
-
+// 5. Post-Slack Parsers for other routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
