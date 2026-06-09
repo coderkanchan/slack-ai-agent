@@ -8,7 +8,6 @@ const app = express();
 // 1. Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
-// 2. Request Logger for Tunnels
 app.use((req, res, next) => {
   console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
