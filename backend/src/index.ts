@@ -14,7 +14,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. FIXED: Mount Slack Receiver Router directly as Middleware
 app.use(slackApp.receiver.router);
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
