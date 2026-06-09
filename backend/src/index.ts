@@ -21,7 +21,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 
 // 🔥 NEW: Real-Time AI Slash Command
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-  // 1. Instantly acknowledge the request to satisfy Slack's 3-second rule
   await ack();
 
   const userPrompt = command.text;
@@ -36,7 +35,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   }
 
   try {
-    // 2. Fetch lightning-fast response from Groq Cloud
     const aiAnswer = await generateAIResponse(userPrompt);
 
     await respond({
