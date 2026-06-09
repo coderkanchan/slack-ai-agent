@@ -7,7 +7,6 @@ if (!process.env.GROQ_API_KEY) {
   console.error("❌ Missing GROQ_API_KEY in environment variables!");
 }
 
-// Groq Client Instance Initialization
 export const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
