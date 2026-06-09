@@ -6,13 +6,16 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
+// 1. Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
+// 2. Request Logger (For diagnostics)
 app.use((req, res, next) => {
   console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
 });
 
+// 3. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
@@ -26,25 +29,25 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
+// 4. FIXED Slack Main Routing Endpoint Mapping (Standard Integration Pattern)
 app.post('/slack/events', slackRawBodyParser, async (req: any, res: any) => {
   console.log("📥 Forwarding current payload to Slack Bolt Core Framework...");
   const receiver = (slackApp as any).receiver;
+
   if (receiver) {
-    if (typeof receiver.router === 'function') {
-      return receiver.router(req, res);
-    } else if (typeof receiver.handle === 'function') {
-      try {
-        await receiver.handle(req, res);
-        return;
-      } catch (err) {
-        console.error("Bolt execution engine crashed:", err);
-        return res.status(500).send();
-      }
+    try {
+      // Is method se Bolt framework internal router arguments crash (Callback Required) se bach jata hai
+      await receiver.requestHandler(req, res);
+      return;
+    } catch (err) {
+      console.error("Bolt execution engine requestHandler crashed:", err);
+      return res.status(500).send();
     }
   }
   return res.status(404).send('Slack Receiver interface context not found');
 });
 
+// 5. Post-Slack Parsers for normal routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
