@@ -12,9 +12,6 @@ export const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-/**
- * Helper function to generate AI responses using fast Llama models
- */
 export const generateAIResponse = async (prompt: string): Promise<string> => {
   try {
     const chatCompletion = await groq.chat.completions.create({
