@@ -24,7 +24,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 
 // 4. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
-  await ack(); // Instantly acknowledges to prevent the 3-second timeout!
+  await ack(); 
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
   try {
     await respond({
