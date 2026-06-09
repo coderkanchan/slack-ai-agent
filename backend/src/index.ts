@@ -15,7 +15,6 @@ app.use((req, res, next) => {
 });
 
 // 3. FIXED: Mount Slack Receiver Router directly as Middleware
-// Yeh Bolt ke internal express instance ko bina kisi context delay ke connect karega
 app.use(slackApp.receiver.router);
 
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
