@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import { slackApp } from './config/slack.js';
-import { generateAIResponse } from './config/groq.js'; 
+import { generateAIResponse } from './config/groq.js'; // Groq helper import kiya
 
 const app = express();
 
