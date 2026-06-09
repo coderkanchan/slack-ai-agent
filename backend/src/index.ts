@@ -5,16 +5,26 @@ import { slackApp } from './config/slack.js';
 
 const app = express();
 
+// 1. Global Middlewares
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
+// 2. Request Logger for Tunnels
 app.use((req, res, next) => {
   console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
   next();
 });
 
-app.use(slackApp.receiver.router);
+// 3. FIXED: Mount Slack Receiver Router with Explicit Type Casting
+// (slackApp as any) use karne se TypeScript ka type mismatch error completely solve ho jayega
+if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router) {
+  app.use((slackApp as any).receiver.router);
+} else {
+  console.error("❌ Critical: Slack Receiver Router instance is missing!");
+}
 
+// 4. Slack Command Handler Memory Registration
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
+  await ack(); // Instantly acknowledges to prevent the 3-second timeout!
   console.log(`⚡ Command /vibecheck triggered perfectly by: ${command.user_name}`);
   try {
     await respond({
@@ -26,6 +36,7 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
+// 5. Post-Slack Parsers for other routes
 app.use(express.json());
 
 app.get('/health', (req, res) => {
