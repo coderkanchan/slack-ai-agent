@@ -52,7 +52,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
 
     // 4. 🔥 Clean replacement using top-level layout overwrite
     await respond({
-      replace_original: true, // This will completely clear the loading block now!
+      replace_original: true, 
       blocks: [
         {
           type: "section",
