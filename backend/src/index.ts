@@ -33,7 +33,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
-  // 2. Clear block configuration for the loading state (No in_channel for DM compatibility)
   await respond({
     blocks: [
       {
