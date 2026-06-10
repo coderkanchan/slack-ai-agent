@@ -20,11 +20,10 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-
+  // 1. Slack ka timeout timeout hatane ke liye instantly acknowledge karein
   await ack();
 
   const userPrompt = command.text;
-  console.log(`🤖 AI Prompt received from ${command.user_name}: "${userPrompt}"`);
 
   if (!userPrompt) {
     await respond({
@@ -34,19 +33,21 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
+  // 2. Sirf clean loading text bhejein (bina block mix-up ke)
   await respond({
     response_type: 'in_channel',
-    text: `⏳ *VibeCheck-Bot is thinking...* \n_\`Processing: ${userPrompt}\`_\n` +
-      `• _Analyzing prompt..._\n• _Fetching insights from Groq Cloud..._`
+    text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
   });
 
   try {
+    // 3. Groq se response lein
     const aiAnswer = await generateAIResponse(userPrompt);
 
+    // 4. 🔥 Purane message ko completely fresh payload se replace karein
     await respond({
       response_type: 'in_channel',
-      replace_original: true, 
-      text: `*🤖 AI Agent Response to "${userPrompt}":*\n\n${aiAnswer}`
+      replace_original: true, // Purana loading content safa-chatt!
+      text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
     });
 
   } catch (err) {
