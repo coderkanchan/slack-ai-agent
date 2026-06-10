@@ -54,7 +54,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     // 4. 🔥 Complete replacement with mirror blocks layout
     await respond({
       response_type: 'in_channel',
-      replace_original: true, // This WILL wipe out the loading block now
+      replace_original: true, 
       blocks: [
         {
           type: "section",
