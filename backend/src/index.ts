@@ -20,7 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-  // 1. Instantly acknowledge the request to Slack
+
   await ack();
 
   const userPrompt = command.text;
@@ -33,7 +33,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
-  // 2. Pure blocks layout for loading state
   await respond({
     response_type: 'in_channel',
     blocks: [
