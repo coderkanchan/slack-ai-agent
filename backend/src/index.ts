@@ -20,7 +20,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-  // 1. Slack ka timeout timeout hatane ke liye instantly acknowledge karein
   await ack();
 
   const userPrompt = command.text;
@@ -33,7 +32,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
-  // 2. Sirf clean loading text bhejein (bina block mix-up ke)
   await respond({
     response_type: 'in_channel',
     text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
