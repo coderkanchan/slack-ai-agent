@@ -20,7 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-  
+
   await ack();
 
   const userPrompt = command.text;
@@ -33,7 +33,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
-  // 2. Clear block configuration for the loading state
   await respond({
     response_type: 'in_channel',
     blocks: [
