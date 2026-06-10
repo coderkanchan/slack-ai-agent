@@ -38,10 +38,8 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
-    // 3. Groq se response lein
     const aiAnswer = await generateAIResponse(userPrompt);
 
-    // 4. 🔥 Purane message ko completely fresh payload se replace karein
     await respond({
       response_type: 'in_channel',
       replace_original: true, // Purana loading content safa-chatt!
