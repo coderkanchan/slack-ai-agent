@@ -51,7 +51,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
 
     await respond({
       response_type: 'in_channel',
-      replace_original: true, // This clears the loading block completely
+      replace_original: true, 
       blocks: [
         {
           type: "section",
