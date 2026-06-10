@@ -20,6 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
+  // 1. Instantly acknowledge the request to Slack
   await ack();
 
   const userPrompt = command.text;
@@ -32,18 +33,37 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
+  // 2. Clear block configuration for the loading state
   await respond({
     response_type: 'in_channel',
-    text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
+        }
+      }
+    ]
   });
 
   try {
+    // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
+    // 4. 🔥 Forcefully replace the original blocks with a completely fresh layout
     await respond({
       response_type: 'in_channel',
-      replace_original: true, 
-      text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
+      replace_original: true, // This clears the loading block completely
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
+          }
+        }
+      ]
     });
 
   } catch (err) {
