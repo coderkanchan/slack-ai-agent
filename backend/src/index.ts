@@ -20,7 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-
+  // 1. Instantly acknowledge the request to Slack
   await ack();
 
   const userPrompt = command.text;
@@ -33,6 +33,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
+  // 2. Pure blocks layout for loading state
   await respond({
     response_type: 'in_channel',
     blocks: [
@@ -47,11 +48,13 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
+    // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
+    // 4. 🔥 Complete replacement with mirror blocks layout
     await respond({
       response_type: 'in_channel',
-      replace_original: true, 
+      replace_original: true, // This WILL wipe out the loading block now
       blocks: [
         {
           type: "section",
@@ -68,7 +71,15 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     await respond({
       response_type: 'ephemeral',
       replace_original: true,
-      text: '❌ Oops! Something went wrong while connecting to the AI engine.'
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: '❌ Oops! Something went wrong while connecting to the AI engine.'
+          }
+        }
+      ]
     });
   }
 });
