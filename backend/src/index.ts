@@ -51,7 +51,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
-    // 4. 🔥 Complete replacement with mirror blocks layout
     await respond({
       response_type: 'in_channel',
       replace_original: true, 
