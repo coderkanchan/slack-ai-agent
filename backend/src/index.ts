@@ -42,7 +42,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
 
     await respond({
       response_type: 'in_channel',
-      replace_original: true, // Purana loading content safa-chatt!
+      replace_original: true, 
       text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
     });
 
