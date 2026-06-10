@@ -20,7 +20,7 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-
+  // 1. Instantly acknowledge the request to Slack
   await ack();
 
   const userPrompt = command.text;
@@ -33,8 +33,8 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     return;
   }
 
+  // 2. Clear block configuration for the loading state (No in_channel for DM compatibility)
   await respond({
-    response_type: 'in_channel',
     blocks: [
       {
         type: "section",
@@ -47,11 +47,12 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
+    // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
+    // 4. 🔥 Clean replacement using top-level layout overwrite
     await respond({
-      response_type: 'in_channel',
-      replace_original: true, 
+      replace_original: true, // This will completely clear the loading block now!
       blocks: [
         {
           type: "section",
@@ -68,15 +69,7 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
     await respond({
       response_type: 'ephemeral',
       replace_original: true,
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: '❌ Oops! Something went wrong while connecting to the AI engine.'
-          }
-        }
-      ]
+      text: '❌ Oops! Something went wrong while connecting to the AI engine.'
     });
   }
 });
