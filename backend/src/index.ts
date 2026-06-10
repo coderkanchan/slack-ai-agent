@@ -49,7 +49,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   try {
     const aiAnswer = await generateAIResponse(userPrompt);
 
-    // 4. 🔥 Forcefully replace the original blocks with a completely fresh layout
     await respond({
       response_type: 'in_channel',
       replace_original: true, // This clears the loading block completely
