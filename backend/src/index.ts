@@ -20,20 +20,23 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
- 
+  // 1. Instantly acknowledge the request to Slack
   await ack();
 
   const userPrompt = command.text;
 
   if (!userPrompt) {
     await respond({
-      response_type: 'ephemeral',
+      response_type: 'ephemeral', // Warning sirf user ko dikhe
       text: '⚠️ Please provide a prompt! Example: `/ask-ai What is Node.js?`'
     });
     return;
   }
 
+  // 2. Clear block configuration for loading state as a REAL message (in_channel)
+  // Isse "Only visible to you" hat jayega aur replace_original perfectly kaam karega!
   await respond({
+    response_type: 'in_channel',
     blocks: [
       {
         type: "section",
@@ -46,10 +49,13 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
+    // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
+    // 4. 🔥 Clean replacement using top-level layout overwrite on the real message
     await respond({
-      replace_original: true, 
+      response_type: 'in_channel',
+      replace_original: true, // Ephemeral na hone ki wajah se yeh ab 100% purane block ko wipe out kar dega
       blocks: [
         {
           type: "section",
