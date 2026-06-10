@@ -48,7 +48,6 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
-    // 3. Get fast response from Groq
     const aiAnswer = await generateAIResponse(userPrompt);
 
     await respond({
