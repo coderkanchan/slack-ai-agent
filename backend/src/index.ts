@@ -96,7 +96,7 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
         });
       }
     }
-  })(); // Immediate Execution Arrow Function
+  })();
 });
 
 app.use(express.json());
