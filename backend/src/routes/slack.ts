@@ -112,7 +112,6 @@ slackApp.event('app_mention', async ({ event, client }) => {
   }
 });
 
-// 3. Direct Message Channel Workflow (Forces Absolute Overwrites)
 slackApp.message(async ({ message, client }) => {
   if (!('text' in message && message.text && !message.subtype)) return;
   if (!message.user) return;
