@@ -41,7 +41,6 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
     let loadingMessageTs = "";
 
     try {
-      // 3. Post structural loading message
       const loaderResult = await client.chat.postMessage({
         channel: channelId,
         blocks: [
