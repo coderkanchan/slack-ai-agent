@@ -48,7 +48,6 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-// 2. App Mentions Trigger Workflow (Clean Message Blocks Replacement)
 slackApp.event('app_mention', async ({ event, client }) => {
   if (!event.user) return;
   const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
