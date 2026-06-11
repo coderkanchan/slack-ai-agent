@@ -19,7 +19,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
   console.error("❌ Critical: Slack Receiver Router instance is missing!");
 }
 
-// ✅ Refactored Slash Command Handler inside backend/src/index.ts
 slackApp.command('/ask-ai', async ({ command, ack, client }) => {
   await ack();
 
