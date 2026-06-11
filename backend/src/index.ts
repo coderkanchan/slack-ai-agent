@@ -21,7 +21,6 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 
 // ✅ Refactored Slash Command Handler inside backend/src/index.ts
 slackApp.command('/ask-ai', async ({ command, ack, client }) => {
-  // 1. Instantly respond to Slack to completely avoid "operation_timeout"
   await ack();
 
   (async () => {
