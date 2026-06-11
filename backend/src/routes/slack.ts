@@ -73,7 +73,6 @@ slackApp.event('app_mention', async ({ event, client }) => {
 
     const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
 
-    // Dynamic clean structural rewrite
     if (loaderMessageTs) {
       await client.chat.update({
         channel: event.channel,
