@@ -121,7 +121,6 @@ slackApp.message(async ({ message, client }) => {
   let loaderMessageTs = "";
 
   try {
-    // Structural layout wrapper initialization
     const loaderResult = await client.chat.postMessage({
       channel: channelId,
       blocks: [
