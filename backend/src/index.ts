@@ -20,14 +20,14 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
 }
 
 slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-  
+
   await ack();
 
   const userPrompt = command.text;
 
   if (!userPrompt) {
     await respond({
-      response_type: 'ephemeral', 
+      response_type: 'ephemeral',
       text: '⚠️ Please provide a prompt! Example: `/ask-ai What is Node.js?`'
     });
     return;
@@ -47,11 +47,12 @@ slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
   });
 
   try {
+
     const aiAnswer = await generateAIResponse(userPrompt);
 
     await respond({
       response_type: 'in_channel',
-      replace_original: true, 
+      replace_original: true,
       blocks: [
         {
           type: "section",
