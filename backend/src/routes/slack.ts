@@ -3,6 +3,7 @@ import { GroqService } from '../services/groq.js';
 
 const groqService = new GroqService();
 
+// 1. /vibecheck Slash Command (Clean Structural Diagnostic Layout)
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
@@ -47,75 +48,131 @@ slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   }
 });
 
-slackApp.event('app_mention', async ({ event, client, say }) => {
+// 2. App Mentions Trigger Workflow (Clean Message Blocks Replacement)
+slackApp.event('app_mention', async ({ event, client }) => {
   if (!event.user) return;
   const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
 
-  let loaderMessage;
+  let loaderMessageTs = "";
   try {
-    loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Interpreting workspace mention loops..._`);
-
-    client.chat.update({
+    // Initial Post using explicit clean block layout
+    const loaderResult = await client.chat.postMessage({
       channel: event.channel,
-      ts: loaderMessage.ts as string,
-      text: `⏳ *Thinking Steps:*\n🔍 _Reading database cluster configuration..._\n🧠 _Routing semantic matrices via Groq..._`
-    }).catch(err => console.error("Non-blocking UI shift failed:", err));
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `⏳ *VibeCheck-Bot is thinking...*\n• _Interpreting workspace mention loops..._`
+          }
+        }
+      ]
+    });
+
+    loaderMessageTs = loaderResult.ts || "";
 
     const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
 
-    await client.chat.update({
-      channel: event.channel,
-      ts: loaderMessage.ts as string,
-      text: `Hello <@${event.user}>! ${reply}`
-    });
+    // Dynamic clean structural rewrite
+    if (loaderMessageTs) {
+      await client.chat.update({
+        channel: event.channel,
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Hello <@${event.user}>! \n\n${reply.trim()}`
+            }
+          }
+        ]
+      });
+    }
   } catch (error: any) {
     console.error('[Runtime Exception] Application mention stack error:', error);
-    if (loaderMessage?.ts) {
+    if (loaderMessageTs) {
       const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
       await client.chat.update({
         channel: event.channel,
-        ts: loaderMessage.ts as string,
-        text: isRateLimit
-          ? `⚠️ *VibeCheck System Alert:* AI Traffic Engine limits hit (Groq 429 Rate Limit). Please try again after a few minutes.`
-          : `⚠️ *VibeCheck System Alert:* Connection timeout. Please try resending your message.`
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: isRateLimit
+                ? `⚠️ *VibeCheck System Alert:* AI Traffic Engine limits hit (Groq 429 Rate Limit). Please try again after a few minutes.`
+                : `⚠️ *VibeCheck System Alert:* Connection timeout. Please try resending your message.`
+            }
+          }
+        ]
       });
     }
   }
 });
 
-slackApp.message(async ({ message, client, say }) => {
+// 3. Direct Message Channel Workflow (Forces Absolute Overwrites)
+slackApp.message(async ({ message, client }) => {
   if (!('text' in message && message.text && !message.subtype)) return;
   if (!message.user) return;
 
   const channelId = message.channel;
-  let loaderMessage;
+  let loaderMessageTs = "";
 
   try {
-    loaderMessage = await say(`⏳ *Thinking Steps:*\n🔍 _Establishing local communication node connections..._`);
-
-    client.chat.update({
+    // Structural layout wrapper initialization
+    const loaderResult = await client.chat.postMessage({
       channel: channelId,
-      ts: loaderMessage.ts as string,
-      text: `⏳ *Thinking Steps:*\n🔍 _Validating local node communication pipelines..._\n🧠 _Routing tool calling matrices via Groq..._`
-    }).catch(err => console.error("Non-blocking UI shift failed:", err));
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
+          }
+        }
+      ]
+    });
+
+    loaderMessageTs = loaderResult.ts || "";
 
     const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
-    await client.chat.update({
-      channel: channelId,
-      ts: loaderMessage.ts as string,
-      text: reply
-    });
+    // Complete clean replacement block execution context
+    if (loaderMessageTs) {
+      await client.chat.update({
+        channel: channelId,
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: reply.trim()
+            }
+          }
+        ]
+      });
+    }
   } catch (error: any) {
     console.error('[Runtime Exception] Direct Message stack error:', error);
-    if (loaderMessage?.ts) {
+    if (loaderMessageTs) {
       const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
       await client.chat.update({
         channel: channelId,
-        ts: loaderMessage.ts as string,
-        text: isRateLimit
-          ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
-          : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: isRateLimit
+                ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
+                : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+            }
+          }
+        ]
       });
     }
   }
