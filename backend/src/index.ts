@@ -24,7 +24,6 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
   // 1. Instantly respond to Slack to completely avoid "operation_timeout"
   await ack();
 
-  // 2. Poore logic ko ek async immediate function block mein daal dein (Non-blocking)
   (async () => {
     const userPrompt = command.text;
     const channelId = command.channel_id;
