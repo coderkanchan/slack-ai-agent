@@ -19,59 +19,84 @@ if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router)
   console.error("❌ Critical: Slack Receiver Router instance is missing!");
 }
 
-slackApp.command('/ask-ai', async ({ command, ack, respond }) => {
-
+// ✅ Refactored Slash Command Handler inside backend/src/index.ts
+slackApp.command('/ask-ai', async ({ command, ack, client }) => {
+  // 1. Instantly respond to Slack to completely avoid "operation_timeout"
   await ack();
 
-  const userPrompt = command.text;
+  // 2. Poore logic ko ek async immediate function block mein daal dein (Non-blocking)
+  (async () => {
+    const userPrompt = command.text;
+    const channelId = command.channel_id;
 
-  if (!userPrompt) {
-    await respond({
-      response_type: 'ephemeral',
-      text: '⚠️ Please provide a prompt! Example: `/ask-ai What is Node.js?`'
-    });
-    return;
-  }
+    if (!userPrompt) {
+      await client.chat.postEphemeral({
+        channel: channelId,
+        user: command.user_id,
+        text: '⚠️ Please provide a prompt! Example: `/ask-ai What is Node.js?`'
+      });
+      return;
+    }
 
-  await respond({
-    response_type: 'in_channel',
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
-        }
-      }
-    ]
-  });
+    let loadingMessageTs = "";
 
-  try {
-
-    const aiAnswer = await generateAIResponse(userPrompt);
-
-    await respond({
-      response_type: 'in_channel',
-      replace_original: true,
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
+    try {
+      // 3. Post structural loading message
+      const loaderResult = await client.chat.postMessage({
+        channel: channelId,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing command prompt: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
+            }
           }
-        }
-      ]
-    });
+        ]
+      });
 
-  } catch (err) {
-    console.error("Error processing /ask-ai command:", err);
-    await respond({
-      response_type: 'ephemeral',
-      replace_original: true,
-      text: '❌ Oops! Something went wrong while connecting to the AI engine.'
-    });
-  }
+      loadingMessageTs = loaderResult.ts || "";
+
+      // 4. Fetch response from Groq Cloud
+      const aiAnswer = await generateAIResponse(userPrompt);
+
+      // 5. Replace layout cleanly using message timestamp
+      if (loadingMessageTs) {
+        await client.chat.update({
+          channel: channelId,
+          ts: loadingMessageTs,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
+              }
+            }
+          ]
+        });
+      }
+
+    } catch (err) {
+      console.error("Error processing /ask-ai command:", err);
+
+      if (loadingMessageTs) {
+        await client.chat.update({
+          channel: channelId,
+          ts: loadingMessageTs,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: '❌ Oops! Something went wrong while connecting to the AI engine.'
+              }
+            }
+          ]
+        });
+      }
+    }
+  })(); // Immediate Execution Arrow Function
 });
 
 app.use(express.json());
