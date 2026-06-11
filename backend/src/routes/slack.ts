@@ -139,7 +139,6 @@ slackApp.message(async ({ message, client }) => {
 
     const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
-    // Complete clean replacement block execution context
     if (loaderMessageTs) {
       await client.chat.update({
         channel: channelId,
