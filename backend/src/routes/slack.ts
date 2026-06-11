@@ -55,7 +55,6 @@ slackApp.event('app_mention', async ({ event, client }) => {
 
   let loaderMessageTs = "";
   try {
-    // Initial Post using explicit clean block layout
     const loaderResult = await client.chat.postMessage({
       channel: event.channel,
       blocks: [
