@@ -60,7 +60,6 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
       // 4. Fetch response from Groq Cloud
       const aiAnswer = await generateAIResponse(userPrompt);
 
-      // 5. Replace layout cleanly using message timestamp
       if (loadingMessageTs) {
         await client.chat.update({
           channel: channelId,
