@@ -57,7 +57,6 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
 
       loadingMessageTs = loaderResult.ts || "";
 
-      // 4. Fetch response from Groq Cloud
       const aiAnswer = await generateAIResponse(userPrompt);
 
       if (loadingMessageTs) {
