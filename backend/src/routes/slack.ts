@@ -3,7 +3,6 @@ import { GroqService } from '../services/groq.js';
 
 const groqService = new GroqService();
 
-// 1. /vibecheck Slash Command (Clean Structural Diagnostic Layout)
 slackApp.command('/vibecheck', async ({ command, ack, respond }) => {
   await ack();
   try {
