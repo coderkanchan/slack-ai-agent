@@ -1,59 +1,62 @@
-import express from 'express';
-import cors from 'cors';
-import { connectDatabase } from './config/db.js';
-import { slackApp } from './config/slack.js';
-import { generateAIResponse } from './config/groq.js';
+import { App, SlackCommandMiddlewareArgs, SlackEventMiddlewareArgs, SayFn } from '@slack/bolt';
+import { generateAIResponse } from './services/aiService'; 
+import dotenv from 'dotenv';
 
-const app = express();
+dotenv.config();
 
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
-
-app.use((req, res, next) => {
-  console.log(`📡 [Tunnel Diagnostic Hit]: ${req.method} ${req.url}`);
-  next();
-});
-
-if (slackApp && (slackApp as any).receiver && (slackApp as any).receiver.router) {
-  app.use((slackApp as any).receiver.router);
-} else {
-  console.error("❌ Critical: Slack Receiver Router instance is missing!");
+if (!process.env.SLACK_BOT_TOKEN || !process.env.SLACK_SIGNING_SECRET) {
+  throw new Error('CRITICAL: Missing essential Slack configuration tokens in environment variables.');
 }
 
-slackApp.command('/ask-ai', async ({ command, ack, client }) => {
+const slackApp = new App({
+  token: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+});
+
+interface SlackMessageEvent {
+  type: string;
+  text?: string;
+  channel: string;
+  ts?: string;
+  subtype?: string;
+  user?: string;
+}
+
+slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlewareArgs) => {
   await ack();
 
-  (async () => {
-    const userPrompt = command.text;
-    const channelId = command.channel_id;
+  (async (): Promise<void> => {
+    const userPrompt: string = command.text.trim();
+    const channelId: string = command.channel_id;
+    const userId: string = command.user_id;
 
     if (!userPrompt) {
       await client.chat.postEphemeral({
         channel: channelId,
-        user: command.user_id,
-        text: '⚠️ Please provide a prompt! Example: `/ask-ai What is Node.js?`'
+        user: userId,
+        text: '⚠️ *Invalid Usage:* Please provide a valid prompt. \n_Example:_ `/ask-ai Explain asynchronous code execution flow.`',
       });
       return;
     }
 
-    let loadingMessageTs = "";
+    let loadingMessageTs = '';
 
     try {
       const loaderResult = await client.chat.postMessage({
         channel: channelId,
         blocks: [
           {
-            type: "section",
+            type: 'section',
             text: {
-              type: "mrkdwn",
-              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing command prompt: "${userPrompt}"_\n• _Fetching from Groq Cloud..._`
-            }
-          }
-        ]
+              type: 'mrkdwn',
+              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Processing workflow prompt: "${userPrompt}"_\n• _Querying remote Groq LLM layer..._`,
+            },
+          },
+        ],
       });
 
-      loadingMessageTs = loaderResult.ts || "";
-
-      const aiAnswer = await generateAIResponse(userPrompt);
+      loadingMessageTs = loaderResult.ts || '';
+      const aiAnswer: string = await generateAIResponse(userPrompt);
 
       if (loadingMessageTs) {
         await client.chat.update({
@@ -61,18 +64,17 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
           ts: loadingMessageTs,
           blocks: [
             {
-              type: "section",
+              type: 'section',
               text: {
-                type: "mrkdwn",
-                text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`
-              }
-            }
-          ]
+                type: 'mrkdwn',
+                text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`,
+              },
+            },
+          ],
         });
       }
-
-    } catch (err) {
-      console.error("Error processing /ask-ai command:", err);
+    } catch (error) {
+      console.error('[CRITICAL FAILURE] Error inside /ask-ai execution stream:', error);
 
       if (loadingMessageTs) {
         await client.chat.update({
@@ -80,35 +82,97 @@ slackApp.command('/ask-ai', async ({ command, ack, client }) => {
           ts: loadingMessageTs,
           blocks: [
             {
-              type: "section",
+              type: 'section',
               text: {
-                type: "mrkdwn",
-                text: '❌ Oops! Something went wrong while connecting to the AI engine.'
-              }
-            }
-          ]
+                type: 'mrkdwn',
+                text: '❌ *System Error:* An unhandled exception occurred while processing the neural network layers.',
+              },
+            },
+          ],
         });
       }
     }
   })();
 });
 
-app.use(express.json());
+slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>) => {
+  const msgEvent = message as SlackMessageEvent;
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: "online", gateway: "verified" });
+  if (msgEvent.subtype && msgEvent.subtype === 'bot_message') {
+    return;
+  }
+
+  const rawMessageText: string | undefined = msgEvent.text;
+  const channelId: string = msgEvent.channel;
+
+  if (!rawMessageText || rawMessageText.trim() === '') {
+    return;
+  }
+
+  const cleanedMessageText: string = rawMessageText.trim();
+  let textMessageTs = '';
+
+  try {
+    const responseTracker = await client.chat.postMessage({
+      channel: channelId,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${cleanedMessageText}"_\n• _Fetching context data..._`,
+          },
+        },
+      ],
+    });
+
+    textMessageTs = responseTracker.ts || '';
+
+    const aiResponsePayload: string = await generateAIResponse(cleanedMessageText);
+
+    if (textMessageTs) {
+      await client.chat.update({
+        channel: channelId,
+        ts: textMessageTs,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `🤖 *AI Agent Response to "${cleanedMessageText}":*\n\n${aiResponsePayload.trim()}`,
+            },
+          },
+        ],
+      });
+    }
+  } catch (error) {
+    console.error('[CRITICAL FAILURE] Error inside text message event middleware:', error);
+
+    if (textMessageTs) {
+      await client.chat.update({
+        channel: channelId,
+        ts: textMessageTs,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '❌ *Timeout Error:* Failed to establish complete handshakes with the inference engine.',
+            },
+          },
+        ],
+      });
+    }
+  }
 });
 
-const startServer = async () => {
+(async () => {
+  const runtimePort: number = Number(process.env.PORT) || 5000;
   try {
-    await connectDatabase();
-    const port = 5000;
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`🚀 [Server Boot] Core Engine listening smoothly on port ${port}`);
-    });
-  } catch (error) {
-    console.error("Database initialization failed:", error);
+    await slackApp.start(runtimePort);
+    console.log(`⚡️ Professional VibeCheck Engine is actively running on production port: ${runtimePort}`);
+  } catch (initError) {
+    console.error('Fatal initialization error during Bolt runtime bootstrap:', initError);
+    process.exit(1);
   }
-};
-
-startServer();
+})();
