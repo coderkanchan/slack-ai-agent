@@ -1,5 +1,5 @@
-import { App, SlackCommandMiddlewareArgs, SlackEventMiddlewareArgs, SayFn } from '@slack/bolt';
-import { generateAIResponse } from './services/aiService'; 
+import { App, SlackCommandMiddlewareArgs, SlackEventMiddlewareArgs } from '@slack/bolt';
+import { GroqService } from './services/groq.js'; /
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,6 +12,8 @@ const slackApp = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
+
+const aiOrchestrator = new GroqService();
 
 interface SlackMessageEvent {
   type: string;
@@ -49,14 +51,15 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlew
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Processing workflow prompt: "${userPrompt}"_\n• _Querying remote Groq LLM layer..._`,
+              text: `⏳ *VibeCheck-Bot is processing...*\n• _Executing workflow query: "${userPrompt}"_\n• _Routing through autonomous Llama 3.3 pipeline..._`,
             },
           },
         ],
       });
 
       loadingMessageTs = loaderResult.ts || '';
-      const aiAnswer: string = await generateAIResponse(userPrompt);
+
+      const aiAnswer: string = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
 
       if (loadingMessageTs) {
         await client.chat.update({
@@ -67,7 +70,7 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlew
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `🤖 *AI Agent Response to "${userPrompt}":*\n\n${aiAnswer.trim()}`,
+                text: `🤖 *AI Agent Response:*\n\n${aiAnswer.trim()}`,
               },
             },
           ],
@@ -85,7 +88,7 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlew
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: '❌ *System Error:* An unhandled exception occurred while processing the neural network layers.',
+                text: '❌ *System Error:* An unhandled exception occurred while computing tool calling workflows.',
               },
             },
           ],
@@ -104,8 +107,9 @@ slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>
 
   const rawMessageText: string | undefined = msgEvent.text;
   const channelId: string = msgEvent.channel;
+  const userId: string = msgEvent.user || '';
 
-  if (!rawMessageText || rawMessageText.trim() === '') {
+  if (!rawMessageText || rawMessageText.trim() === '' || !userId) {
     return;
   }
 
@@ -120,7 +124,7 @@ slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `⏳ *VibeCheck-Bot is thinking...*\n• _Analyzing: "${cleanedMessageText}"_\n• _Fetching context data..._`,
+            text: `⏳ *VibeCheck-Bot is analyzing text...*\n• _Parsing semantic tokens: "${cleanedMessageText}"_\n• _Checking workflow triggers..._`,
           },
         },
       ],
@@ -128,7 +132,7 @@ slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>
 
     textMessageTs = responseTracker.ts || '';
 
-    const aiResponsePayload: string = await generateAIResponse(cleanedMessageText);
+    const aiResponsePayload: string = await aiOrchestrator.getChatResponse(userId, cleanedMessageText, channelId);
 
     if (textMessageTs) {
       await client.chat.update({
@@ -139,7 +143,7 @@ slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `🤖 *AI Agent Response to "${cleanedMessageText}":*\n\n${aiResponsePayload.trim()}`,
+              text: `🤖 *AI Agent Response:*\n\n${aiResponsePayload.trim()}`,
             },
           },
         ],
@@ -157,7 +161,7 @@ slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '❌ *Timeout Error:* Failed to establish complete handshakes with the inference engine.',
+              text: '❌ *Timeout Error:* Failed to establish runtime handshakes with remote database nodes.',
             },
           },
         ],
