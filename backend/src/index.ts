@@ -1,5 +1,5 @@
-import { App, SlackCommandMiddlewareArgs, SlackEventMiddlewareArgs } from '@slack/bolt';
-import { GroqService } from './services/groq.js'; /
+import { App } from '@slack/bolt';
+import { GroqService } from './services/groq.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -24,7 +24,7 @@ interface SlackMessageEvent {
   user?: string;
 }
 
-slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlewareArgs) => {
+slackApp.command('/ask-ai', async ({ command, ack, client }: any) => {
   await ack();
 
   (async (): Promise<void> => {
@@ -98,7 +98,7 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: SlackCommandMiddlew
   })();
 });
 
-slackApp.message(async ({ message, client }: SlackEventMiddlewareArgs<'message'>) => {
+slackApp.message(async ({ message, client }: any) => {
   const msgEvent = message as SlackMessageEvent;
 
   if (msgEvent.subtype && msgEvent.subtype === 'bot_message') {
