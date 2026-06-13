@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { GroqService } from './services/groq.js';
 import dotenv from 'dotenv';
+import { connectDatabase } from './config/db.js';
 
 dotenv.config();
 
@@ -172,8 +173,12 @@ slackApp.message(async ({ message, client }: any) => {
 
 (async () => {
   const runtimePort: number = Number(process.env.PORT) || 5000;
+  
   try {
+    await connectDatabase(); 
+
     await slackApp.start(runtimePort);
+    
     console.log(`⚡️ Professional VibeCheck Engine is actively running on production port: ${runtimePort}`);
   } catch (initError) {
     console.error('Fatal initialization error during Bolt runtime bootstrap:', initError);
