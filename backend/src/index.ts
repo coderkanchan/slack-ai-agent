@@ -1,7 +1,7 @@
 import { App } from '@slack/bolt';
 import { GroqService } from './services/groq.js';
-import dotenv from 'dotenv';
 import { connectDatabase } from './config/db.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -60,21 +60,14 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: any) => {
 
       loadingMessageTs = loaderResult.ts || '';
 
-      const aiAnswer: string = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
+      const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
 
       if (loadingMessageTs) {
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `🤖 *AI Agent Response:*\n\n${aiAnswer.trim()}`,
-              },
-            },
-          ],
+          text: aiResult.text, 
+          blocks: aiResult.blocks 
         });
       }
     } catch (error) {
@@ -133,21 +126,14 @@ slackApp.message(async ({ message, client }: any) => {
 
     textMessageTs = responseTracker.ts || '';
 
-    const aiResponsePayload: string = await aiOrchestrator.getChatResponse(userId, cleanedMessageText, channelId);
+    const aiResponsePayload = await aiOrchestrator.getChatResponse(userId, cleanedMessageText, channelId);
 
     if (textMessageTs) {
       await client.chat.update({
         channel: channelId,
         ts: textMessageTs,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `🤖 *AI Agent Response:*\n\n${aiResponsePayload.trim()}`,
-            },
-          },
-        ],
+        text: aiResponsePayload.text, 
+        blocks: aiResponsePayload.blocks 
       });
     }
   } catch (error) {
@@ -173,12 +159,9 @@ slackApp.message(async ({ message, client }: any) => {
 
 (async () => {
   const runtimePort: number = Number(process.env.PORT) || 5000;
-  
   try {
-    await connectDatabase(); 
-
+    await connectDatabase();
     await slackApp.start(runtimePort);
-    
     console.log(`⚡️ Professional VibeCheck Engine is actively running on production port: ${runtimePort}`);
   } catch (initError) {
     console.error('Fatal initialization error during Bolt runtime bootstrap:', initError);
