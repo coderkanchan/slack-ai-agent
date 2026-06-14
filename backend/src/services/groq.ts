@@ -83,7 +83,7 @@ export class GroqService {
     ];
   }
 
-  public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<any> {
+  public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<{ text: string; blocks: any[] }> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
       let profile = await UserProfile.findOne({ slackUserId: userId });
@@ -204,7 +204,7 @@ export class GroqService {
       });
 
       let responseMessage = response.choices[0]?.message;
-      if (!responseMessage) return 'An orchestration exception occurred.';
+      if (!responseMessage) return { text: 'An orchestration exception occurred.', blocks: [] };
 
       let rawContent = '';
 
