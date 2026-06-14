@@ -45,6 +45,9 @@ export class GroqService {
     return null;
   }
 
+  /**
+   * Generates a clean enterprise-grade Slack Block Kit UI response payload
+   */
   public buildBlockKitResponse(answer: string, score: number, status: string): any[] {
     let statusEmoji = '🟢';
     if (status === 'NEUTRAL') statusEmoji = '🟡';
@@ -204,15 +207,20 @@ export class GroqService {
       });
 
       let responseMessage = response.choices[0]?.message;
-      if (!responseMessage) return { text: 'An orchestration exception occurred.', blocks: [] };
+
+      // FIX 1: Returns a proper object pattern matching the definition signature
+      if (!responseMessage) {
+        return { text: 'An orchestration exception occurred.', blocks: [] };
+      }
 
       let rawContent = '';
 
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        // FIX 2: Explicitly handles content mapping string fallback for TS strict compiler
         userHistory.push({
           role: 'assistant',
           content: responseMessage.content || '',
-          tool_calls: responseMessage.tool_calls
+          tool_calls: responseMessage.tool_calls as any
         });
 
         for (const toolCall of responseMessage.tool_calls) {
