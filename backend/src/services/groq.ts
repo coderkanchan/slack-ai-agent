@@ -45,13 +45,51 @@ export class GroqService {
     return null;
   }
 
-  public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<string> {
+  public buildBlockKitResponse(answer: string, score: number, status: string): any[] {
+    let statusEmoji = '🟢';
+    if (status === 'NEUTRAL') statusEmoji = '🟡';
+    if (status === 'STRESSED') statusEmoji = '🔴';
+
+    return [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `🤖 *VibeCheck Orchestrator Core Response*`
+        }
+      },
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `${answer}`
+        }
+      },
+      {
+        type: 'divider'
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `📊 *Workspace Analytics:* Vibe Score: *${score}/100* | Status: ${statusEmoji} *${status}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
+          }
+        ]
+      }
+    ];
+  }
+
+  public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<any> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
       let profile = await UserProfile.findOne({ slackUserId: userId });
 
       if (!profile) {
-        profile = await UserProfile.create({ slackUserId: userId, name: detectedName || '' });
+        profile = await UserProfile.create({ slackUserId: userId, name: detectedName || '', vibeScore: 100, vibeStatus: 'OPTIMAL' });
       } else if (detectedName) {
         profile.name = detectedName;
         await profile.save();
@@ -61,31 +99,29 @@ export class GroqService {
         ? `User Identity Context: The Slack user you are actively communicating with is named "${profile.name}". Always address them directly by their name.`
         : `User Identity Context: You do not know the user's name yet. If they state it, remember it naturally via systemic pipelines.`;
 
+      const operationalInstructions = `You are an advanced corporate AI Orchestrator Agent inside Slack driven by Llama 3.3.
+      Your context: Current User ID is ${userId} and Current Channel ID is ${channelId}.
+      ${userIdentityContext}
+      
+      CRITICAL INSTRUCTION: You must evaluate the emotional sentiment/vibe of every user input text. 
+      At the absolute END of your response text, you MUST append a metadata json string block exactly on a single new line like:
+      METADATA={"vibeScore": 85, "vibeStatus": "OPTIMAL"}
+      - Treat positive/confident logs as OPTIMAL (Score 80-100)
+      - Treat calm/flat/confused inquiries as NEUTRAL (Score 50-79)
+      - Treat aggressive/stressed/panicked bugs logs as STRESSED (Score 0-49)
+      Ensure this line is always at the bottom of the raw text response.
+
+      You have autonomous access to workspace tools:
+      1. If asked about system health/metrics, invoke getSystemMetrics.
+      2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
+      3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
+      4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
+      5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`;
+
       if (!this.memory[userId]) {
-        this.memory[userId] = [
-          {
-            role: 'system',
-            content: `You are an advanced corporate AI Orchestrator Agent inside Slack driven by Llama 3.3. 
-            Your context: Current User ID is ${userId} and Current Channel ID is ${channelId}.
-            ${userIdentityContext}
-            You have autonomous access to workspace tools. 
-            1. If asked about system health/metrics, invoke getSystemMetrics.
-            2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
-            3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
-            4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
-            5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`,
-          },
-        ];
+        this.memory[userId] = [{ role: 'system', content: operationalInstructions }];
       } else if (this.memory[userId] && this.memory[userId][0]) {
-        this.memory[userId][0].content = `You are an advanced corporate AI Orchestrator Agent inside Slack driven by Llama 3.3. 
-        Your context: Current User ID is ${userId} and Current Channel ID is ${channelId}.
-        ${userIdentityContext}
-        You have autonomous access to workspace tools. 
-        1. If asked about system health/metrics, invoke getSystemMetrics.
-        2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
-        3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
-        4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
-        5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`;
+        this.memory[userId][0].content = operationalInstructions;
       }
 
       const userHistory = this.memory[userId];
@@ -170,6 +206,8 @@ export class GroqService {
       let responseMessage = response.choices[0]?.message;
       if (!responseMessage) return 'An orchestration exception occurred.';
 
+      let rawContent = '';
+
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
         userHistory.push({
           role: 'assistant',
@@ -179,14 +217,13 @@ export class GroqService {
 
         for (const toolCall of responseMessage.tool_calls) {
           let toolResult = '';
-
           let args: any = {};
           try {
             if (toolCall.function.arguments) {
               args = JSON.parse(toolCall.function.arguments);
             }
           } catch (e) {
-            console.warn('[Orchestrator Warning] Argument tracing structure payload format unresolvable.');
+            console.warn('[Orchestrator Warning] Argument parsing metrics format error.');
           }
 
           if (toolCall.function.name === 'getSystemMetrics') {
@@ -215,20 +252,48 @@ export class GroqService {
           temperature: 0.3,
         });
 
-        const finalReply = secondResponse.choices[0]?.message?.content || 'Execution failed to compute tool telemetry.';
-        userHistory.push({ role: 'assistant', content: finalReply });
-        this.pruneContextHistory(userId);
-        return finalReply;
+        rawContent = secondResponse.choices[0]?.message?.content || 'Execution failed to compute tool telemetry.';
+      } else {
+        rawContent = responseMessage.content || 'Unable to process communication trace.';
       }
 
-      const standardReply = responseMessage.content || 'Unable to process communication trace.';
-      userHistory.push({ role: 'assistant', content: standardReply });
+      let computedScore = profile.vibeScore || 100;
+      let computedStatus = profile.vibeStatus || 'OPTIMAL';
+      let cleanedAnswerText = rawContent;
+
+      const metadataRegex = /METADATA\s*=\s*(\{.*?\})/i;
+      const match = rawContent.match(metadataRegex);
+
+      if (match && match[1]) {
+        try {
+          const parsedMeta = JSON.parse(match[1]);
+          computedScore = parsedMeta.vibeScore ?? computedScore;
+          computedStatus = parsedMeta.vibeStatus ?? computedStatus;
+          cleanedAnswerText = rawContent.replace(metadataRegex, '').trim();
+
+          profile.vibeScore = computedScore;
+          profile.vibeStatus = computedStatus;
+          profile.updatedAt = new Date();
+          await profile.save();
+        } catch (parseErr) {
+          console.error('Failed to parse dynamic vibe engine text streams:', parseErr);
+        }
+      }
+
+      userHistory.push({ role: 'assistant', content: rawContent });
       this.pruneContextHistory(userId);
-      return standardReply;
+
+      return {
+        text: cleanedAnswerText,
+        blocks: this.buildBlockKitResponse(cleanedAnswerText, computedScore, computedStatus)
+      };
 
     } catch (error) {
       console.error(`[Agent Core Failure]:`, error);
-      return 'The agent gateway encountered an error executing database tool pipelines.';
+      return {
+        text: 'The agent gateway encountered an error executing database tool pipelines.',
+        blocks: []
+      };
     }
   }
 
