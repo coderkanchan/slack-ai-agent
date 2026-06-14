@@ -45,9 +45,6 @@ export class GroqService {
     return null;
   }
 
-  /**
-   * Generates a clean enterprise-grade Slack Block Kit UI response payload
-   */
   public buildBlockKitResponse(answer: string, score: number, status: string): any[] {
     let statusEmoji = '🟢';
     if (status === 'NEUTRAL') statusEmoji = '🟡';
@@ -89,10 +86,15 @@ export class GroqService {
   public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<{ text: string; blocks: any[] }> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
-      let profile = await UserProfile.findOne({ slackUserId: userId });
+      let profile = await UserProfile.findOne({ slackUserId: userId }) as any;
 
       if (!profile) {
-        profile = await UserProfile.create({ slackUserId: userId, name: detectedName || '', vibeScore: 100, vibeStatus: 'OPTIMAL' });
+        profile = await UserProfile.create({
+          slackUserId: userId,
+          name: detectedName || '',
+          vibeScore: 100,
+          vibeStatus: 'OPTIMAL'
+        }) as any;
       } else if (detectedName) {
         profile.name = detectedName;
         await profile.save();
@@ -215,7 +217,6 @@ export class GroqService {
       let rawContent = '';
 
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-        // FIXED: Safe dynamic cast to bypass GroqSDK internal type safety blockers
         (userHistory as any[]).push({
           role: 'assistant',
           content: responseMessage.content || '',
@@ -245,7 +246,6 @@ export class GroqService {
             toolResult = await this.taskService.updateTaskStatus(args.taskId, args.status);
           }
 
-          // FIXED: Safe dynamic cast for tool response items appending
           (userHistory as any[]).push({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -288,7 +288,6 @@ export class GroqService {
         }
       }
 
-      // FIXED: Safe dynamic cast to save AI final conversational state
       (userHistory as any[]).push({ role: 'assistant', content: rawContent });
       this.pruneContextHistory(userId);
 
