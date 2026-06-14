@@ -7,15 +7,14 @@ export interface IUserProfile extends Document {
   updatedAt: Date;
 }
 
-const UserProfileSchema: Schema = new Schema(
-  
+const UserProfileSchema = new mongoose.Schema(
   {
-    slackUserId: { type: String, required: true, unique: true, index: true },
-    name: { type: String, default: '' }
-  },
-  {
-    timestamps: true
-  }
+    slackUserId: { type: String, required: true, unique: true },
+    name: { type: String, default: '' },
+    vibeScore: { type: Number, default: 100 }, 
+    vibeStatus: { type: String, default: 'OPTIMAL' }, 
+    updatedAt: { type: Date, default: Date.now }
+  }, { timestamps: true }
 );
 
 export const UserProfile = mongoose.model<IUserProfile>('UserProfile', UserProfileSchema);
