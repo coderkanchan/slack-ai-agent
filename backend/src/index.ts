@@ -118,7 +118,7 @@ slackApp.message(async ({ message, client }: any) => {
       await client.chat.update({
         channel: channelId,
         ts: textMessageTs,
-        text: aiResponsePayload.text,
+        text: aiResponsePayload.text ? aiResponsePayload.text.replace(/^getting,\s*/i, '') : '',
         blocks: aiResponsePayload.blocks
       });
     }
