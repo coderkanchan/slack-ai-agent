@@ -18,7 +18,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks }) => {
         <h2 className="text-lg font-bold tracking-wide text-slate-200">Slack Workflow Task Registry</h2>
         <span className="text-xs font-mono text-slate-500">Live Database Buffering</span>
       </div>
-      <div className="divide-y divide-slate-800 font-mono text-sm max-h-[400px] overflow-y-auto">
+      <div className="divide-y divide-slate-800 font-mono text-sm max-h-100 overflow-y-auto">
         {tasks && tasks.length > 0 ? (
           tasks.map((task) => (
             <div key={task._id} className="p-4 flex items-center justify-between hover:bg-slate-800/40 transition duration-150">
