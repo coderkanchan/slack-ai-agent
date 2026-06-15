@@ -71,6 +71,8 @@ slackApp.event('app_mention', async ({ event, client }) => {
     const reply = await groqService.getChatResponse(event.user, cleanMessage, event.channel);
 
     if (loaderMessageTs) {
+      const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
+
       await client.chat.update({
         channel: event.channel,
         ts: loaderMessageTs,
@@ -79,7 +81,7 @@ slackApp.event('app_mention', async ({ event, client }) => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `Hello <@${event.user}>! \n\n${reply.trim()}`
+              text: `Hello <@${event.user}>! \n\n${textOutput.trim()}`
             }
           }
         ]
@@ -134,6 +136,8 @@ slackApp.message(async ({ message, client }) => {
     const reply = await groqService.getChatResponse(message.user, message.text.trim(), channelId);
 
     if (loaderMessageTs) {
+      const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
+
       await client.chat.update({
         channel: channelId,
         ts: loaderMessageTs,
@@ -142,7 +146,7 @@ slackApp.message(async ({ message, client }) => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: reply.trim()
+              text: textOutput.trim()
             }
           }
         ]

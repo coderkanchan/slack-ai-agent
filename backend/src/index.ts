@@ -2,6 +2,7 @@ import { App } from '@slack/bolt';
 import { GroqService } from './services/groq.js';
 import { connectDatabase } from './config/db.js';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
