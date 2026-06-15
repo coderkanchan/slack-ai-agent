@@ -82,7 +82,12 @@ slackApp.command('/ask-ai', async ({ command, ack, client }: any) => {
     const loaderResult = await client.chat.postMessage({ channel: channelId, text: '⏳ Processing...' });
     loadingMessageTs = loaderResult.ts || '';
     const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
-    await client.chat.update({ channel: channelId, ts: loadingMessageTs, text: aiResult.text, blocks: aiResult.blocks });
+    await client.chat.update({
+      channel: channelId,
+      ts: loadingMessageTs,
+      text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
+      blocks: aiResult.blocks
+    });
   } catch (error) {
     console.error('Error:', error);
   }
@@ -100,7 +105,6 @@ slackApp.message(async ({ message, client }: any) => {
 
   const cleanedMessageText: string = rawMessageText.trim();
   let textMessageTs = '';
-
   try {
     const responseTracker = await client.chat.postMessage({
       channel: channelId,
