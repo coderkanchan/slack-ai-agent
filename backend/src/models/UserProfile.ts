@@ -1,22 +1,39 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 
 export interface IUserProfile extends Document {
   slackUserId: string;
-  name?: string;
+  name: string;
   vibeScore: number;
-  vibeStatus: string;
+  vibeStatus: 'OPTIMAL' | 'NEUTRAL' | 'STRESSED';
   createdAt: Date;
   updatedAt: Date;
 }
 
-const UserProfileSchema = new mongoose.Schema(
+const UserProfileSchema = new Schema<IUserProfile>(
   {
-    slackUserId: { type: String, required: true, unique: true },
-    name: { type: String, default: '' },
-    vibeScore: { type: Number, default: 100 },
-    vibeStatus: { type: String, default: 'OPTIMAL' },
-    updatedAt: { type: Date, default: Date.now }
-  }, { timestamps: true }
+    slackUserId: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true
+    },
+    name: {
+      type: String,
+      default: ''
+    },
+    vibeScore: {
+      type: Number,
+      default: 100
+    },
+    vibeStatus: {
+      type: String,
+      enum: ['OPTIMAL', 'NEUTRAL', 'STRESSED'],
+      default: 'OPTIMAL'
+    }
+  },
+  {
+    timestamps: true
+  }
 );
 
-export const UserProfile = mongoose.model<IUserProfile>('UserProfile', UserProfileSchema);
+export const UserProfile = model<IUserProfile>('UserProfile', UserProfileSchema);
