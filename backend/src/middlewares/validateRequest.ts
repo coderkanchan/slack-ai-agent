@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { ZodError, ZodSchema } from 'zod';
 
-export const validateRequest = (schema: AnyZodObject) => {
+export const validateRequest = (schema: ZodSchema<any>) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       await schema.parseAsync({
@@ -10,13 +10,13 @@ export const validateRequest = (schema: AnyZodObject) => {
         params: req.params,
       });
       return next();
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({
           success: false,
           error_code: "VALIDATION_ERROR",
           message: "The requested payload layer failed schema parsing tests.",
-          details: error.errors.map((err) => ({
+          details: error.errors.map((err: any) => ({
             field: err.path.join('.'),
             issue: err.message,
           })),
