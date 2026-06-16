@@ -1,8 +1,6 @@
 import { App } from '@slack/bolt';
 import { GroqService } from '../services/groq.js';
 
-const aiOrchestrator = new GroqService();
-
 interface SlackMessageEvent {
   type: string;
   text?: string;
@@ -13,6 +11,7 @@ interface SlackMessageEvent {
 }
 
 export const registerSlackListeners = (slackApp: App): void => {
+  const aiOrchestrator = new GroqService();
 
   slackApp.command('/ask-ai', async ({ command, ack, client }: any) => {
     await ack();
