@@ -17,11 +17,13 @@ export const validateRequest = (schema: ZodSchema<any>) => {
       return next();
     } catch (error: unknown) {
       if (error instanceof ZodError) {
+        const zodError = error as ZodError;
+
         return res.status(400).json({
           success: false,
           error_code: "VALIDATION_ERROR",
           message: "The requested payload layer failed schema parsing tests.",
-          details: error.errors.map((err: ZodIssueItem) => ({
+          details: zodError.issues.map((err: ZodIssueItem) => ({
             field: err.path.join('.'),
             issue: err.message,
           })),
