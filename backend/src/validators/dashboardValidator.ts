@@ -9,13 +9,9 @@ export const analyticsQuerySchema = z.object({
 
 export const updateTaskStatusSchema = z.object({
   body: z.object({
-    taskId: z
-      .string({ required_error: "Task ID is required for state machine transitions." })
-      .regex(/^[0-9a-fA-F]{24}$/, "Invalid MongoDB ObjectId format."),
-
-    newStatus: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED'], {
-      required_error: "Target operational status is required.",
-      invalid_type_error: "Status must be PENDING, IN_PROGRESS, or COMPLETED."
+    taskId: z.string().min(1, "Task ID is required for state machine transitions.").regex(/^[0-9a-fA-F]{24}$/, "Invalid MongoDB ObjectId format."),
+    newStatus: z.string().refine((val) => ['PENDING', 'IN_PROGRESS', 'COMPLETED'].includes(val), {
+      message: "Target operational status is required and must be PENDING, IN_PROGRESS, or COMPLETED."
     })
   })
 });
