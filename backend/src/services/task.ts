@@ -1,7 +1,7 @@
-import { TaskModel } from '../models/Task.js';
+import { TaskModel, ITask } from '../models/Task.js';
 
 export class TaskService {
-  public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string) {
+  public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string): Promise<string> {
     try {
       const taskData: any = {
         title: title,
@@ -31,7 +31,7 @@ export class TaskService {
     }
   }
 
-  public async getChannelTasks(channelId: string, assignedTo?: string) {
+  public async getChannelTasks(channelId: string, assignedTo?: string): Promise<string> {
     try {
       const query: any = { channelId };
       if (assignedTo) {
@@ -57,7 +57,7 @@ export class TaskService {
     }
   }
 
-  public async updateTaskStatus(taskId: string, newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') {
+  public async updateTaskStatus(taskId: string, newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'): Promise<string> {
     try {
       const updatedTask = await TaskModel.findByIdAndUpdate(
         taskId,
@@ -78,6 +78,30 @@ export class TaskService {
     } catch (error: any) {
       console.error('[Task Service Error] Status transition exception:', error);
       return JSON.stringify({ status: 'ERROR', message: error.message });
+    }
+  }
+
+  public static async createAutonomousTask(taskData: {
+    title: string;
+    assignedTo: string;
+    assignedBy: string;
+    channelId: string;
+    dueDate?: string;
+  }): Promise<ITask> {
+    try {
+      const newTask = new TaskModel({
+        title: taskData.title,
+        assignedTo: taskData.assignedTo,
+        assignedBy: taskData.assignedBy,
+        channelId: taskData.channelId,
+        status: 'PENDING',
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : undefined
+      });
+
+      return await newTask.save();
+    } catch (error) {
+      console.error('❌ [TaskService Error] Autonomous task insertion failed:', error);
+      throw error;
     }
   }
 }
