@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { GroqService } from '../services/groq.js';
+import logger from '../utils/logger.js';
 
 interface SlackMessageEvent {
   type: string;
@@ -37,7 +38,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         blocks: aiResult.blocks
       });
     } catch (error) {
-      console.error('[Slack Listeners] Error inside /ask-ai command:', error);
+      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Error inside /ask-ai command:');
     }
   });
 
@@ -81,7 +82,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         ]
       });
     } catch (error) {
-      console.error('[Slack Listeners] /vibecheck failed execution:', error);
+      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] /vibecheck failed execution:');
     }
   });
 
@@ -126,7 +127,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
       }
     } catch (error: any) {
-      console.error('[Slack Listeners] app_mention exception:', error);
+      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] app_mention exception:');
       if (loaderMessageTs) {
         const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
         await client.chat.update({
@@ -192,7 +193,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
       }
     } catch (error: any) {
-      console.error('[Slack Listeners] Direct Message processing exception:', error);
+      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
       if (loaderMessageTs) {
         const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
         await client.chat.update({
