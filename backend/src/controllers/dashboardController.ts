@@ -51,7 +51,7 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<Res
         message: "The requested task was not found in the state database store."
       });
     }
-
+    logger.info({ taskId, newStatus }, 'Task pipeline state transitioned successfully');
     return res.status(200).json({
       success: true,
       message: `Task pipeline transition updated successfully to state: ${newStatus}`,
