@@ -5,8 +5,8 @@ import logger from '../utils/logger.js';
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<Response> => {
   try {
     const db = mongoose.connection.db;
-    const taskCollection = db ? db.collection('tasks') : null;
-
+    const taskCollection = db ? db.collection('tasks') : null; 
+    
     const rawTasks = taskCollection ? await taskCollection.find({}).toArray() : [];
 
     return res.status(200).json({
