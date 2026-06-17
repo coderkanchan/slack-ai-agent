@@ -1,4 +1,5 @@
 import axios from 'axios';
+import logger from '../utils/logger.js';
 
 export class SearchService {
   private apiKey: string;
@@ -9,7 +10,7 @@ export class SearchService {
 
   public async executeSearch(query: string): Promise<string> {
     if (!this.apiKey) {
-      console.error('[Search Service] Tavily API key is missing in configuration.');
+      logger.error({ context: '[Search Service] Tavily API key' }, '[Search Service] Tavily API key is missing in configuration.');
       return "Search optimization skipped: API credentials missing on the backend engine.";
     }
 

@@ -1,4 +1,5 @@
 import { TaskModel, ITask } from '../models/Task.js';
+import logger from '../utils/logger.js';
 
 export class TaskService {
   public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string): Promise<string> {
@@ -26,7 +27,7 @@ export class TaskService {
         message: `Task successfully assigned to user ${assignedTo}.`
       });
     } catch (error: any) {
-      console.error('[Task Service Error] Creation failed:', error);
+      logger.error({ error, context: 'Task Service' }, '[Task Service Error] Creation failed:');
       return JSON.stringify({ status: 'ERROR', message: error.message });
     }
   }
@@ -52,7 +53,7 @@ export class TaskService {
         dueDate: t.dueDate ? t.dueDate.toDateString() : 'No Deadline'
       })));
     } catch (error: any) {
-      console.error('[Task Service Error] Fetching logs failed:', error);
+      logger.error({ error, context: 'Task Service' }, '[Task Service Error] Fetching logs failed:');
       return JSON.stringify({ status: 'ERROR', message: error.message });
     }
   }
@@ -76,7 +77,7 @@ export class TaskService {
         message: `Task status updated successfully to ${newStatus}.`
       });
     } catch (error: any) {
-      console.error('[Task Service Error] Status transition exception:', error);
+      logger.error({ error, context: 'Task Service' }, '[Task Service Error] Status transition exception');
       return JSON.stringify({ status: 'ERROR', message: error.message });
     }
   }
@@ -101,6 +102,7 @@ export class TaskService {
       return await newTask.save();
     } catch (error) {
       console.error('❌ [TaskService Error] Autonomous task insertion failed:', error);
+      logger.error({ error, context: 'Autonomous task insertion' }, '[TaskService Error] Autonomous task insertion failed:');
       throw error;
     }
   }
