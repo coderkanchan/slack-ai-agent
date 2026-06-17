@@ -1,10 +1,10 @@
 import pino from 'pino';
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isProduction = process.env.NODE_ENV === 'production';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  transport: isDevelopment
+  transport: !isProduction
     ? {
       target: 'pino-pretty',
       options: {
@@ -13,7 +13,7 @@ const logger = pino({
         ignore: 'pid,hostname',
       },
     }
-    : undefined, 
+    : undefined,
 });
 
 export default logger;
