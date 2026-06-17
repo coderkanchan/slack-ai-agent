@@ -238,7 +238,7 @@ export class GroqService {
               args = JSON.parse(toolCall.function.arguments);
             }
           } catch (e) {
-            console.warn('[Orchestrator Warning] Argument parsing metrics format error.');
+            logger.warn({ error: e, context: 'Groq Tool Call Arguments Parsing' }, 'Argument parsing metrics format error within agent pipeline execution.');
           }
 
           if (toolCall.function.name === 'getSystemMetrics') {

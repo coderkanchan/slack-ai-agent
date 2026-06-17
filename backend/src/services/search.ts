@@ -32,7 +32,7 @@ export class SearchService {
       return formattedSnippets;
 
     } catch (error: any) {
-      console.error('[Search Utility Error] High-performance pipeline execution failed:', error?.response?.data || error.message);
+      logger.error({ error: error?.response?.data || error, context: 'Tavily Search Engine API Execution' }, 'High-performance Tavily web search engine pipeline execution failed.');
       return "Unable to resolve query due to remote data connectivity layer failures.";
     }
   }
