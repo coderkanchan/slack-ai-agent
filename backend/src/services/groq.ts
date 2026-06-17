@@ -3,6 +3,7 @@ import { ConversationMemory } from '../types/index.js';
 import { SearchService } from './search.js';
 import { TaskService } from './task.js';
 import { UserProfile } from '../models/UserProfile.js';
+import logger from '../utils/logger.js';
 
 export class GroqService {
   private groq: Groq;
@@ -290,7 +291,7 @@ export class GroqService {
           profile.updatedAt = new Date();
           await profile.save();
         } catch (parseErr) {
-          console.error('Failed to parse dynamic vibe engine text streams:', parseErr);
+          logger.error({ error: parseErr, context: 'parse dynamic vibe engine text streams' }, 'Failed to parse dynamic vibe engine text streams:');
         }
       }
 
@@ -303,7 +304,7 @@ export class GroqService {
       };
 
     } catch (error) {
-      console.error(`[Agent Core Failure]:`, error);
+      logger.error({ error, context: 'Agent Core' }, 'Agent Core Failure');
       return {
         text: 'The agent gateway encountered an error executing database tool pipelines.',
         blocks: []
