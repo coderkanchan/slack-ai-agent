@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import logger from '../utils/logger.js';
 
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<Response> => {
   try {
@@ -23,7 +24,7 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
       }))
     });
   } catch (error) {
-    console.error('[Dashboard Controller Error]:', error);
+    logger.error({ error, context: 'Dashboard Controller' }, '[Dashboard Controller Error]');
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -61,7 +62,7 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<Res
     });
 
   } catch (error) {
-    console.error('[Update Task Status Controller Error]:', error);
+    logger.error({ error, context: 'Update Task Status Controller' }, '[Update Task Status Controller Error]');
     return res.status(500).json({
       success: false,
       message: 'Internal server architecture crash during state machine modification.'
