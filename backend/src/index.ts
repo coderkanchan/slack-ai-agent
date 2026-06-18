@@ -3,6 +3,7 @@ dotenv.config();
 import pkg from '@slack/bolt';
 const { App, ExpressReceiver } = pkg;
 import express from 'express';
+// @ts-ignore
 import cors from 'cors';
 import { connectDatabase } from './config/db.js';
 import dashboardRoutes from './router/dashboardRoutes.js';
