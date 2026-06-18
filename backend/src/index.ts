@@ -27,6 +27,8 @@ const slackApp = new App({
 
 const app = receiver.app;
 
+app.use(httpLogger);
+
 app.use(express.json());
 
 app.use(cors({
