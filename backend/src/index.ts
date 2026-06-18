@@ -8,6 +8,7 @@ import { connectDatabase } from './config/db.js';
 import dashboardRoutes from './router/dashboardRoutes.js';
 import { registerSlackListeners } from './listeners/slackListeners.js';
 import logger from './utils/logger.js';
+import { httpLogger } from './middlewares/httpLogger.js';
 
 if (!process.env.SLACK_BOT_TOKEN || !process.env.SLACK_SIGNING_SECRET) {
   logger.error({ context: 'System Initialization' }, 'CRITICAL: Missing essential Slack configuration tokens in environment variables.');
