@@ -34,12 +34,27 @@ app.use(httpLogger);
 
 app.use(express.json());
 
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
+  : ['http://localhost:3000'];
+
+// app.use(cors({
+//   origin: 'process.env.ALLOWED_ORIGINS',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true
+// }));
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    if (!origin || envOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.error({ unauthorizedOrigin: origin }, 'CORS Policy Security Violation');
+      callback(new Error('CORS Policy Violation'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
-
 app.use('/api/dashboard', dashboardRoutes);
 
 registerSlackListeners(slackApp);
@@ -48,7 +63,7 @@ const server = http.createServer(app);
 
 export const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: envOrigins,
     methods: ['GET', 'POST']
   },
   transports: ['websocket']
@@ -69,7 +84,6 @@ io.on('connection', (socket) => {
     server.listen(runtimePort, () => {
       logger.info(`⚡️ [System Core] Professional Architecture Engine running on port: ${runtimePort}`);
     });
-    logger.info(`⚡️ [System Core] Professional Architecture Engine running on port: ${runtimePort}`);
   } catch (initError) {
     logger.error({ error: initError, context: 'System Boot' }, 'System boot failed execution runtime panic.');
     process.exit(1);
