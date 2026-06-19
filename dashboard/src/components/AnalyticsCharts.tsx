@@ -15,7 +15,6 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
 
-      {/* 📊 Bar Chart Matrix */}
       <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-6 shadow-xl">
         <h3 className="text-sm font-bold tracking-wide text-slate-400 uppercase mb-6 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Task Volume Metrics
@@ -35,7 +34,6 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
         </div>
       </div>
 
-      {/* 🎯 Pie Chart Allocation */}
       <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-6 shadow-xl">
         <h3 className="text-sm font-bold tracking-wide text-slate-400 uppercase mb-6 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-amber-500"></span> Workflow Matrix Breakdown
