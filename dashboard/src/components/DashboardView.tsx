@@ -1,6 +1,7 @@
 import React from 'react';
 import { MetricCards } from './MetricCards';
 import { TaskRegistry } from './TaskRegistry';
+import { AnalyticsCharts } from './AnalyticsCharts';
 
 interface DashboardViewProps {
   data: {
@@ -40,6 +41,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
         </div>
 
         <MetricCards metrics={data?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 100 }} />
+
+        <AnalyticsCharts rawData={data} />
 
         <TaskRegistry tasks={data?.tasks || []} />
 
