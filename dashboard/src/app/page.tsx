@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { MetricCards } from './components/MetricCards';
 import { TaskRegistry } from './components/TaskRegistry';
@@ -24,7 +23,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/dashboard/analytics') 
+    // fetch('http://localhost:5001/api/dashboard/analytics') 
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/dashboard/analytics`)
       .then((res) => res.json())
       .then((resData) => {
         if (resData.success) {
