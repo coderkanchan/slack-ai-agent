@@ -1,7 +1,10 @@
-import React from 'react';
+'use client'; 
+
+import React, { useEffect, useState } from 'react';
 import { MetricCards } from './MetricCards';
 import { TaskRegistry } from './TaskRegistry';
 import { AnalyticsCharts } from './AnalyticsCharts';
+import { useSocket } from '@/context/SocketContext'; 
 
 interface DashboardViewProps {
   data: {
@@ -20,7 +23,27 @@ interface DashboardViewProps {
   } | null;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData }) => {
+  const [liveData, setLiveData] = useState(initialData);
+  const { socket, isConnected } = useSocket();
+
+  useEffect(() => {
+    setLiveData(initialData);
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('dashboard_updated', (updatedMatrix: any) => {
+      console.log('🔄 Telemetry Stream Synced: Refreshing Dashboard State Live');
+      setLiveData(updatedMatrix);
+    });
+
+    return () => {
+      socket.off('dashboard_updated');
+    };
+  }, [socket]);
+
   return (
     <main className="flex min-h-screen flex-col bg-slate-950 text-slate-100 p-8 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
       <div className="max-w-7xl w-full mx-auto space-y-8">
@@ -34,17 +57,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
               Synchronized Orchestration Matrix Node Framework logs.
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-950/40 border border-emerald-800/60 text-xs font-black uppercase text-emerald-400 tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400 animate-ping"></span>
-            Telemetry Pipeline Secure
+
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-black uppercase tracking-wider transition-all duration-300 ${isConnected
+              ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-400'
+              : 'bg-rose-950/40 border-rose-800/60 text-rose-400'
+            }`}>
+            <span className={`w-1.5 h-1.5 rounded-full shadow-lg transition-all duration-300 ${isConnected ? 'bg-emerald-400 shadow-emerald-400 animate-ping' : 'bg-rose-400 shadow-rose-400'
+              }`}></span>
+            {isConnected ? 'Telemetry Pipeline Secure' : 'Matrix Stream Severed'}
           </div>
         </div>
 
-        <MetricCards metrics={data?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 100 }} />
+        <MetricCards metrics={liveData?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 100 }} />
 
-        <AnalyticsCharts rawData={data} />
+        <AnalyticsCharts rawData={liveData} />
 
-        <TaskRegistry tasks={data?.tasks || []} />
+        <TaskRegistry tasks={liveData?.tasks || []} />
 
       </div>
     </main>
