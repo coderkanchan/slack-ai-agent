@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { MetricCards } from './components/MetricCards';
-import { TaskRegistry } from './components/TaskRegistry';
+import { MetricCards } from '../components/MetricCards';
+import { TaskRegistry } from '../components/TaskRegistry';
 
 interface DashboardData {
   metrics: {
