@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { GroqService } from '../services/groq.js';
 import logger from '../utils/logger.js';
+import { broadcastDashboardUpdates } from '../utils/telemetry.js';
 
 interface SlackMessageEvent {
   type: string;
@@ -37,6 +38,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
         blocks: aiResult.blocks
       });
+      await broadcastDashboardUpdates();
     } catch (error) {
       logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Error inside /ask-ai command:');
     }
@@ -125,6 +127,7 @@ export const registerSlackListeners = (slackApp: App): void => {
             }
           ]
         });
+        await broadcastDashboardUpdates();
       }
     } catch (error: any) {
       logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] app_mention exception:');
@@ -191,6 +194,7 @@ export const registerSlackListeners = (slackApp: App): void => {
             }
           ]
         });
+        await broadcastDashboardUpdates();
       }
     } catch (error: any) {
       logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
