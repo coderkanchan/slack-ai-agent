@@ -9,10 +9,7 @@ export class TaskService {
         assignedTo: assignedTo,
         assignedBy: assignedBy,
         channelId: channelId,
-        status: 'PENDING',
-        priority: 'LOW' | 'MEDIUM' | 'HIGH',
-        suggestedNextSteps: string[],
-        dueDateStr?: string
+        status: 'PENDING'
       };
 
       if (dueDateStr) {
