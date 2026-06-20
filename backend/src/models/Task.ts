@@ -6,6 +6,8 @@ export interface ITask extends Document {
   assignedBy: string;
   channelId: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  suggestedNextSteps: string[];
   dueDate?: Date;
   createdAt: Date;
 }
@@ -35,6 +37,15 @@ const TaskSchema = new Schema<ITask>(
       type: String,
       enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
       default: 'PENDING'
+    },
+    priority: {                           
+      type: String,
+      enum: ['LOW', 'MEDIUM', 'HIGH'],
+      default: 'MEDIUM'
+    },
+    suggestedNextSteps: {                 
+      type: [String],
+      default: []
     },
     dueDate: {
       type: Date
