@@ -38,18 +38,18 @@ const envOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
   : ['http://localhost:3000'];
 
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     if (!origin || envOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       logger.error({ unauthorizedOrigin: origin }, 'CORS Policy Security Violation');
-//       callback(new Error('CORS Policy Violation'));
-//     }
-//   },
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   credentials: true
-// }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || envOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.error({ unauthorizedOrigin: origin }, 'CORS Policy Security Violation');
+      callback(new Error('CORS Policy Violation'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 
 app.use('/api/dashboard', dashboardRoutes);
 
