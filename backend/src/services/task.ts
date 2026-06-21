@@ -2,14 +2,24 @@ import { TaskModel, ITask } from '../models/Task.js';
 import logger from '../utils/logger.js';
 
 export class TaskService {
-  public async createTask(title: string, assignedTo: string, assignedBy: string, channelId: string, dueDateStr?: string): Promise<string> {
+  public async createTask(
+    title: string,
+    assignedTo: string,
+    assignedBy: string,
+    channelId: string,
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM',
+    suggestedNextSteps: string[] = [],
+    dueDateStr?: string
+  ): Promise<string> {
     try {
       const taskData: any = {
         title: title,
         assignedTo: assignedTo,
         assignedBy: assignedBy,
         channelId: channelId,
-        status: 'PENDING'
+        status: 'PENDING',
+        priority: priority,                  
+        suggestedNextSteps: suggestedNextSteps 
       };
 
       if (dueDateStr) {
@@ -24,7 +34,8 @@ export class TaskService {
       return JSON.stringify({
         status: 'SUCCESS',
         taskId: newTask._id,
-        message: `Task successfully assigned to user ${assignedTo}.`
+        priority: newTask.priority,
+        message: `Task successfully assigned to user ${assignedTo} with ${priority} priority.`
       });
     } catch (error: any) {
       logger.error({ error, context: 'Task Service' }, '[Task Service Error] Creation failed:');
@@ -50,6 +61,8 @@ export class TaskService {
         title: t.title,
         assignedTo: t.assignedTo,
         status: t.status,
+        priority: (t as any).priority || 'MEDIUM',
+        suggestedNextSteps: (t as any).suggestedNextSteps || [],
         dueDate: t.dueDate ? t.dueDate.toDateString() : 'No Deadline'
       })));
     } catch (error: any) {
