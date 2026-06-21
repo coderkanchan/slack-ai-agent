@@ -44,45 +44,31 @@ export const registerSlackListeners = (slackApp: App): void => {
     }
   });
 
-  slackApp.command('/vibecheck', async ({ command, ack, respond }: any) => {
+  slackApp.command('/vibecheck', async ({ command, ack, client }: any) => {
     await ack();
-    try {
-      const hostTimestamp = new Date().toLocaleString('en-US', {
-        timeZone: 'Asia/Kolkata',
-        dateStyle: 'medium',
-        timeStyle: 'short'
-      });
+    const userPrompt: string = command.text.trim();
+    const channelId: string = command.channel_id;
+    const userId: string = command.user_id;
 
-      await respond({
-        response_type: 'ephemeral',
-        blocks: [
-          {
-            type: 'header',
-            text: { type: 'plain_text', text: '📊 Workspace VibeCheck Diagnostic', emoji: true }
-          },
-          { type: 'divider' },
-          {
-            type: 'section',
-            fields: [
-              { type: 'mrkdwn', text: `*Requested By:*\n<@${command.user_id}>` },
-              { type: 'mrkdwn', text: `*Execution Pulse:*\n\`${hostTimestamp}\`` }
-            ]
-          },
-          {
-            type: 'section',
-            fields: [
-              { type: 'mrkdwn', text: '*Operational Status:*\n🟢 Active & Healthy' },
-              { type: 'mrkdwn', text: '*AI Engine:*\n⚡ Groq (Llama 3.3)' }
-            ]
-          },
-          {
-            type: 'context',
-            elements: [
-              { type: 'plain_text', text: 'VibeCheck-Bot Enterprise Node Engine • System Metrics Optimal', emoji: false }
-            ]
-          }
-        ]
+    const dynamicPrompt = userPrompt || "Provide a quick workspace health check vibe update and system check status.";
+
+    let loadingMessageTs = '';
+    try {
+      const loaderResult = await client.chat.postMessage({
+        channel: channelId,
+        text: '⏳ Analyzing system parameters and workspace vibes...'
       });
+      loadingMessageTs = loaderResult.ts || '';
+
+      const aiResult = await aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
+
+      await client.chat.update({
+        channel: channelId,
+        ts: loadingMessageTs,
+        text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
+        blocks: aiResult.blocks
+      });
+      await broadcastDashboardUpdates();
     } catch (error) {
       logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] /vibecheck failed execution:');
     }
