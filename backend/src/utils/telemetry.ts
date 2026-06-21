@@ -1,5 +1,5 @@
 import { io } from '../index.js';
-import { TaskModel }  from '../models/Task.js'; 
+import { TaskModel } from '../models/Task.js';
 import logger from './logger.js';
 
 export const broadcastDashboardUpdates = async () => {
@@ -17,13 +17,15 @@ export const broadcastDashboardUpdates = async () => {
         totalTasks,
         completedTasks,
         pendingTasks,
-        activeVibeScore: activeVibeScore || 85 
+        activeVibeScore: activeVibeScore || 85
       },
       tasks: tasks.map(t => ({
         _id: t._id.toString(),
         title: t.title,
         status: t.status,
-        assignedTo: t.assignedTo || 'Unassigned'
+        assignedTo: t.assignedTo || 'Unassigned',
+        priority: t.priority || 'MEDIUM',                
+        suggestedNextSteps: t.suggestedNextSteps || []
       }))
     };
 
