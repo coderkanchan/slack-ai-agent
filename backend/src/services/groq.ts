@@ -164,15 +164,21 @@ export class GroqService {
           type: 'function' as const,
           function: {
             name: 'createTask',
-            description: 'Creates and commits a new task into the workspace MongoDB database.',
+            description: 'Creates and commits a new task into the workspace MongoDB database. Intelligently evaluates project urgency and creates immediate technical resolutions.',
             parameters: {
               type: 'object',
               properties: {
                 title: { type: 'string', description: 'The explicit description of the assignment action items.' },
                 assignedTo: { type: 'string', description: 'The Slack User ID string (e.g., U123AB). Extract from syntax.' },
+                priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH'], description: 'Critically evaluate textual engineering urgency/frustration or stack trace critical severity levels to set priority matrix.' },
+                suggestedNextSteps: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Provide exactly 3 highly technical, concrete operational bullet points required to begin executing or resolving this specific task block.'
+                },
                 dueDate: { type: 'string', description: 'Optional ISO date string representation or format YYYY-MM-DD.' }
               },
-              required: ['title', 'assignedTo'],
+              required: ['title', 'assignedTo', 'priority', 'suggestedNextSteps'],
             },
           },
         },
@@ -246,7 +252,15 @@ export class GroqService {
           } else if (toolCall.function.name === 'executeInternetSearch') {
             toolResult = await this.searchService.executeSearch(args.query || '');
           } else if (toolCall.function.name === 'createTask') {
-            toolResult = await this.taskService.createTask(args.title || 'Untitled Task', args.assignedTo || userId, userId, channelId, args.dueDate);
+            toolResult = await this.taskService.createTask(
+              args.title || 'Untitled Task',
+              args.assignedTo || userId,
+              userId,
+              channelId,
+              args.priority || 'MEDIUM',
+              args.suggestedNextSteps || [],
+              args.dueDate
+            );
           } else if (toolCall.function.name === 'getWorkspaceTasks') {
             toolResult = await this.taskService.getChannelTasks(channelId, args ? args.targetUser : undefined);
           } else if (toolCall.function.name === 'updateTaskStatus') {
