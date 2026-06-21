@@ -88,7 +88,8 @@ export const registerSlackListeners = (slackApp: App): void => {
     }
   });
 
-  slackApp.event('app_mention', async ({ event, client }: any) => {
+  slackApp.event('app_mention', async ({ event, client, ack }: any) => {
+    if (ack) await ack();
     if (!event.user) return;
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
 
@@ -117,15 +118,8 @@ export const registerSlackListeners = (slackApp: App): void => {
         await client.chat.update({
           channel: event.channel,
           ts: loaderMessageTs,
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `Hello <@${event.user}>! \n\n${sanitizedOutput.trim()}`
-              }
-            }
-          ]
+          text: `Hello <@${event.user}>! \n\n${sanitizedOutput.trim()}`,
+          blocks: reply.blocks
         });
         await broadcastDashboardUpdates();
       }
@@ -152,7 +146,8 @@ export const registerSlackListeners = (slackApp: App): void => {
     }
   });
 
-  slackApp.message(async ({ message, client }: any) => {
+  slackApp.message(async ({ message, client, ack }: any) => {
+    if (ack) await ack();
     const msgEvent = message as SlackMessageEvent;
     if (msgEvent.subtype && msgEvent.subtype === 'bot_message') return;
     if (!msgEvent.text || msgEvent.text.trim() === '' || !msgEvent.user) return;
@@ -184,15 +179,8 @@ export const registerSlackListeners = (slackApp: App): void => {
         await client.chat.update({
           channel: channelId,
           ts: loaderMessageTs,
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: sanitizedOutput.trim()
-              }
-            }
-          ]
+          text: sanitizedOutput.trim(),
+          blocks: aiResponsePayload.blocks
         });
         await broadcastDashboardUpdates();
       }
