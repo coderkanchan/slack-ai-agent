@@ -26,22 +26,24 @@ export const registerSlackListeners = (slackApp: App): void => {
       return;
     }
 
-    let loadingMessageTs = '';
-    try {
-      const loaderResult = await client.chat.postMessage({ channel: channelId, text: '⏳ Processing...' });
-      loadingMessageTs = loaderResult.ts || '';
-      const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
+    (async () => {
+      let loadingMessageTs = '';
+      try {
+        const loaderResult = await client.chat.postMessage({ channel: channelId, text: '⏳ Processing...' });
+        loadingMessageTs = loaderResult.ts || '';
+        const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
 
-      await client.chat.update({
-        channel: channelId,
-        ts: loadingMessageTs,
-        text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
-        blocks: aiResult.blocks
-      });
-      await broadcastDashboardUpdates();
-    } catch (error) {
-      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Error inside /ask-ai command:');
-    }
+        await client.chat.update({
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
+          blocks: aiResult.blocks
+        });
+        await broadcastDashboardUpdates();
+      } catch (error) {
+        logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Error inside /ask-ai command:');
+      }
+    })();
   });
 
   slackApp.command('/vibecheck', async ({ command, ack, client }: any) => {
@@ -52,26 +54,28 @@ export const registerSlackListeners = (slackApp: App): void => {
 
     const dynamicPrompt = userPrompt || "Provide a quick workspace health check vibe update and system check status.";
 
-    let loadingMessageTs = '';
-    try {
-      const loaderResult = await client.chat.postMessage({
-        channel: channelId,
-        text: '⏳ Analyzing system parameters and workspace vibes...'
-      });
-      loadingMessageTs = loaderResult.ts || '';
+    (async () => {
+      let loadingMessageTs = '';
+      try {
+        const loaderResult = await client.chat.postMessage({
+          channel: channelId,
+          text: '⏳ Analyzing system parameters and workspace vibes...'
+        });
+        loadingMessageTs = loaderResult.ts || '';
 
-      const aiResult = await aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
+        const aiResult = await aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
 
-      await client.chat.update({
-        channel: channelId,
-        ts: loadingMessageTs,
-        text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
-        blocks: aiResult.blocks
-      });
-      await broadcastDashboardUpdates();
-    } catch (error) {
-      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] /vibecheck failed execution:');
-    }
+        await client.chat.update({
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: aiResult.text ? aiResult.text.replace(/^getting,\s*/i, '') : '',
+          blocks: aiResult.blocks
+        });
+        await broadcastDashboardUpdates();
+      } catch (error) {
+        logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] /vibecheck failed execution:');
+      }
+    })();
   });
 
   slackApp.event('app_mention', async ({ event, client, ack }: any) => {
@@ -79,117 +83,126 @@ export const registerSlackListeners = (slackApp: App): void => {
     if (!event.user) return;
     const cleanMessage = event.text.replace(/<@.*?>/, '').trim();
 
-    let loaderMessageTs = "";
-    try {
-      const loaderResult = await client.chat.postMessage({
-        channel: event.channel,
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Interpreting workspace mention loops..._`
-            }
-          }
-        ]
-      });
-
-      loaderMessageTs = loaderResult.ts || "";
-      const reply = await aiOrchestrator.getChatResponse(event.user, cleanMessage, event.channel);
-
-      if (loaderMessageTs) {
-        const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
-        const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
-
-        await client.chat.update({
+    (async () => {
+      let loaderMessageTs = "";
+      try {
+        const loaderResult = await client.chat.postMessage({
           channel: event.channel,
-          ts: loaderMessageTs,
-          text: `Hello <@${event.user}>! \n\n${sanitizedOutput.trim()}`,
-          blocks: reply.blocks
-        });
-        await broadcastDashboardUpdates();
-      }
-    } catch (error: any) {
-      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] app_mention exception:');
-      if (loaderMessageTs) {
-        const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
-        await client.chat.update({
-          channel: event.channel,
-          ts: loaderMessageTs,
           blocks: [
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: isRateLimit
-                  ? `⚠️ *VibeCheck System Alert:* AI Traffic Engine limits hit (Groq 429 Rate Limit). Please try again after a few minutes.`
-                  : `⚠️ *VibeCheck System Alert:* Connection timeout. Please try resending your message.`
+                text: `⏳ *VibeCheck-Bot is thinking...*\n• _Interpreting workspace mention loops..._`
               }
             }
           ]
         });
+
+        loaderMessageTs = loaderResult.ts || "";
+        const reply = await aiOrchestrator.getChatResponse(event.user, cleanMessage, event.channel);
+
+        if (loaderMessageTs) {
+          const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
+          const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
+
+          await client.chat.update({
+            channel: event.channel,
+            ts: loaderMessageTs,
+            text: `Hello <@${event.user}>! \n\n${sanitizedOutput.trim()}`,
+            blocks: reply.blocks
+          });
+          await broadcastDashboardUpdates();
+        }
+      } catch (error: any) {
+        logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] app_mention exception:');
+        if (loaderMessageTs) {
+          const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
+          await client.chat.update({
+            channel: event.channel,
+            ts: loaderMessageTs,
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: isRateLimit
+                    ? `⚠️ *VibeCheck System Alert:* AI Traffic Engine limits hit (Groq 429 Rate Limit). Please try again after a few minutes.`
+                    : `⚠️ *VibeCheck System Alert:* Connection timeout. Please try resending your message.`
+                }
+              }
+            ]
+          });
+        }
       }
-    }
+    })();
   });
 
   slackApp.message(async ({ message, client, ack }: any) => {
-    if (ack) await ack();
+    if (ack) await ack(); // Fast acknowledge to stop retry requests instantly
     const msgEvent = message as SlackMessageEvent;
     if (msgEvent.subtype && msgEvent.subtype === 'bot_message') return;
     if (!msgEvent.text || msgEvent.text.trim() === '' || !msgEvent.user) return;
 
     const channelId = msgEvent.channel;
-    let loaderMessageTs = "";
 
-    try {
-      const loaderResult = await client.chat.postMessage({
-        channel: channelId,
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
-            }
-          }
-        ]
-      });
+    const validUser: string = msgEvent.user;
+    const validText: string = msgEvent.text.trim();
 
-      loaderMessageTs = loaderResult.ts || "";
-      const aiResponsePayload = await aiOrchestrator.getChatResponse(msgEvent.user, msgEvent.text.trim(), channelId);
-
-      if (loaderMessageTs) {
-        const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
-        const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
-
-        await client.chat.update({
+    (async () => {
+      let loaderMessageTs = "";
+      try {
+        const loaderResult = await client.chat.postMessage({
           channel: channelId,
-          ts: loaderMessageTs,
-          text: sanitizedOutput.trim(),
-          blocks: aiResponsePayload.blocks
-        });
-        await broadcastDashboardUpdates();
-      }
-    } catch (error: any) {
-      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
-      if (loaderMessageTs) {
-        const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
-        await client.chat.update({
-          channel: channelId,
-          ts: loaderMessageTs,
           blocks: [
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: isRateLimit
-                  ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
-                  : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+                text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
               }
             }
           ]
         });
+
+        loaderMessageTs = loaderResult.ts || "";
+
+        const aiResponsePayload = await aiOrchestrator.getChatResponse(validUser, validText, channelId);
+
+        if (loaderMessageTs) {
+          const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
+          const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
+
+          await client.chat.update({
+            channel: channelId,
+            ts: loaderMessageTs,
+            text: sanitizedOutput.trim(),
+            blocks: aiResponsePayload.blocks
+          });
+          await broadcastDashboardUpdates();
+        }
+      } catch (error: any) {
+        logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
+        if (loaderMessageTs) {
+          const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
+
+          await client.chat.update({
+            channel: channelId,
+            ts: loaderMessageTs,
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: isRateLimit
+                    ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
+                    : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+                }
+              }
+            ]
+          });
+        }
       }
-    }
+    })();
   });
 };
