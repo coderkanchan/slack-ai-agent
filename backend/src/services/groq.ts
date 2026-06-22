@@ -56,9 +56,10 @@ export class GroqService {
     const lowercaseQuery = query.toLowerCase();
     const matchedKey = Object.keys(docsDatabase).find(key => lowercaseQuery.includes(key));
 
-    if (matchedKey) {
+    if (matchedKey && docsDatabase[matchedKey]) {
       return docsDatabase[matchedKey];
     }
+
     return `🔍 Autonomously scanned global repository networks for: "${query}"${techStack ? ` within [${techStack}]` : ''}. Found optimal diagnostic patch: Ensure strict dependency compilation flags are configured within the tsconfig runner context.`;
   }
 
