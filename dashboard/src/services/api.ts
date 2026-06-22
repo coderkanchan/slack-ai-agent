@@ -16,7 +16,9 @@ export interface DashboardData {
 }
 
 export const dashboardService = {
+
   getAnalytics: async (): Promise<DashboardData> => {
+    
     const response = await fetch(`${API_BASE_URL}/api/dashboard/analytics`, {
       cache: 'no-store', 
     });
