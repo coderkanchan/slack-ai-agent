@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { dashboardService, DashboardData } from '@/services/api';
 
 export function useDashboard() {
+  
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

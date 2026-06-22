@@ -4,6 +4,7 @@ import { DashboardView } from '../components/DashboardView';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  
   let data = null;
   let error = false;
 
