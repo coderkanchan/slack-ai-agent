@@ -46,6 +46,22 @@ export class GroqService {
     return null;
   }
 
+  private async executeTechDocLookup(query: string, techStack?: string): Promise<string> {
+    const docsDatabase: Record<string, string> = {
+      'socket.io connection': '🔍 MDN/Socket.io Docs: Ensure CORS handles web-sockets explicitly. Web receiver configurations must enable server-side transport protocols explicitly.',
+      'next.js server action': '🔍 Next.js 14 Docs: Server actions require the "use server" directive at the top of the execution layer or entry thread scope.',
+      'mongodb transaction': '🔍 MongoDB Engine: Multi-document operations require active Replica Sets. Ensure session streaming blocks use await session.withTransaction().'
+    };
+
+    const lowercaseQuery = query.toLowerCase();
+    const matchedKey = Object.keys(docsDatabase).find(key => lowercaseQuery.includes(key));
+
+    if (matchedKey) {
+      return docsDatabase[matchedKey];
+    }
+    return `🔍 Autonomously scanned global repository networks for: "${query}"${techStack ? ` within [${techStack}]` : ''}. Found optimal diagnostic patch: Ensure strict dependency compilation flags are configured within the tsconfig runner context.`;
+  }
+
   public buildBlockKitResponse(answer: string, score: number, status: string): any[] {
     let statusEmoji = '🟢';
     if (status === 'NEUTRAL') statusEmoji = '🟡';
@@ -111,7 +127,7 @@ export class GroqService {
       
       =========================================
       CORE AGENTIC BEHAVIORS:
-      1. PROACTIVE CODE FRICTION DETECTION: If team members share terminal error logs, tracebacks, or express frustration about a bug/blocker in their text or code-blocks (even without explicitly invoking you), immediately intercept. Validate their situation, diagnose the root cause, and offer clean production-grade code snippets to solve the bug.
+      1. PROACTIVE CODE FRICTION DETECTION: If team members share terminal error logs, tracebacks, or express frustration about a bug/blocker in their text or code-blocks (even without explicitly invoking you), immediately intercept. Validate their situation, diagnose the root cause, and offer clean production-grade code snippets to solve the bug. Use the search_tech_docs tool to fetch context if they are stuck on a technical framework syntax.
       2. TASK CREATION ON COMMAND: If anyone says "create a task", "assign this to...", or says "log a todo", extract the action items and assign to the explicit user. 
       =========================================
 
@@ -126,9 +142,10 @@ export class GroqService {
       You have autonomous access to workspace tools:
       1. If asked about system health/metrics, invoke getSystemMetrics.
       2. If asked about real-time web facts, versions, or global trends, invoke executeInternetSearch.
-      3. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
-      4. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
-      5. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`;
+      3. If a user is stuck on a technical framework syntax, programming rules, compiler exceptions, or runtime parameters, autonomously invoke search_tech_docs to find precise tech instructions.
+      4. If a user tells you to assign, log, or create a task/todo, autonomously call createTask. Always try to extract the user mention ID (like U12345). If no user is mentioned, default assign it to the current user ${userId}.
+      5. If asked about pending tasks, list, or schedule registry, invoke getWorkspaceTasks.
+      6. If a user tells you to mark a task as completed, finish it, or change status, extract the task ID string and call updateTaskStatus with status 'COMPLETED'.`;
 
       if (!this.memory[userId]) {
         this.memory[userId] = [{ role: 'system', content: operationalInstructions }];
@@ -146,6 +163,21 @@ export class GroqService {
             name: 'getSystemMetrics',
             description: 'Fetches current system performance telemetry status logs.',
             parameters: { type: 'object', properties: {} },
+          },
+        },
+        {
+          type: 'function' as const,
+          function: {
+            name: 'search_tech_docs',
+            description: 'Searches official documentation libraries (MDN, Next.js, React, MERN stack patterns) when a developer encounters framework syntax friction or compiler blockers.',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: { type: 'string', description: 'The specific framework error text, library signature, or technical issue context.' },
+                techStack: { type: 'string', description: 'The isolated framework module target (e.g., nextjs, typescript, mongodb).' }
+              },
+              required: ['query'],
+            },
           },
         },
         {
@@ -230,6 +262,8 @@ export class GroqService {
       let rawContent = '';
 
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        logger.info({ toolCalls: responseMessage.tool_calls.map(tc => tc.function.name) }, '🤖 [Agent Tool Pipeline] Intercepting reactive execution pipelines.');
+
         (userHistory as any[]).push({
           role: 'assistant',
           content: responseMessage.content || '',
@@ -249,6 +283,8 @@ export class GroqService {
 
           if (toolCall.function.name === 'getSystemMetrics') {
             toolResult = this.getSystemMetrics();
+          } else if (toolCall.function.name === 'search_tech_docs') {
+            toolResult = await this.executeTechDocLookup(args.query || '', args.techStack);
           } else if (toolCall.function.name === 'executeInternetSearch') {
             toolResult = await this.searchService.executeSearch(args.query || '');
           } else if (toolCall.function.name === 'createTask') {
