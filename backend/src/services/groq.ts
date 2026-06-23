@@ -102,6 +102,49 @@ export class GroqService {
     ];
   }
 
+  public async analyzePassiveMessage(userId: string, userMessage: string): Promise<{ vibeScore: number; vibeStatus: string; adviceText: string }> {
+    try {
+      let profile = await UserProfile.findOne({ slackUserId: userId });
+      const prompt = `Analyze this live developer chat input for mental stress, architectural friction, or tool-related runtime blocks.
+      Input: "${userMessage}"
+      
+      You must respond strictly with a valid JSON block containing:
+      {
+        "vibeScore": number (0-100),
+        "vibeStatus": "OPTIMAL" | "NEUTRAL" | "STRESSED",
+        "adviceText": "Provide a brief 1-2 sentence hyper-technical recommendation code fix if they are facing an error or stressed."
+      }
+      Rules:
+      - Frustrated keywords or error logs must drop score below 70 and set status to STRESSED.
+      - Return absolute raw JSON only. No prose. No markdown wrapper.`;
+
+      const analysisResponse = await this.groq.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      });
+
+      const parsedData = JSON.parse(analysisResponse.choices[0]?.message?.content || '{}');
+
+      const computedScore = parsedData.vibeScore ?? (profile?.vibeScore || 100);
+      const computedStatus = parsedData.vibeStatus ?? (profile?.vibeStatus || 'OPTIMAL');
+      const adviceText = parsedData.adviceText || 'Maintain stable codebase execution architectures.';
+
+      if (profile) {
+        profile.vibeScore = computedScore;
+        profile.vibeStatus = computedStatus;
+        profile.updatedAt = new Date();
+        await profile.save();
+      }
+
+      return { vibeScore: computedScore, vibeStatus: computedStatus, adviceText };
+    } catch (err) {
+      logger.error({ err }, 'Error executing background user passive processing pipeline');
+      return { vibeScore: 100, vibeStatus: 'OPTIMAL', adviceText: '' };
+    }
+  }
+
   public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<{ text: string; blocks: any[] }> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
@@ -157,94 +200,6 @@ export class GroqService {
 
       const userHistory = this.memory[userId];
       userHistory.push({ role: 'user', content: userMessage });
-
-      const tools = [
-        {
-          type: 'function' as const,
-          function: {
-            name: 'getSystemMetrics',
-            description: 'Fetches current system performance telemetry status logs.',
-            parameters: { type: 'object', properties: {} },
-          },
-        },
-        {
-          type: 'function' as const,
-          function: {
-            name: 'search_tech_docs',
-            description: 'Searches official documentation libraries (MDN, Next.js, React, MERN stack patterns) when a developer encounters framework syntax friction or compiler blockers.',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: { type: 'string', description: 'The specific framework error text, library signature, or technical issue context.' },
-                techStack: { type: 'string', description: 'The isolated framework module target (e.g., nextjs, typescript, mongodb).' }
-              },
-              required: ['query'],
-            },
-          },
-        },
-        {
-          type: 'function' as const,
-          function: {
-            name: 'executeInternetSearch',
-            description: 'Searches the live web environment using Tavily for recent real-time documentations and news.',
-            parameters: {
-              type: 'object',
-              properties: { query: { type: 'string', description: 'The search criteria string.' } },
-              required: ['query'],
-            },
-          },
-        },
-        {
-          type: 'function' as const,
-          function: {
-            name: 'createTask',
-            description: 'Creates and commits a new task into the workspace MongoDB database. Intelligently evaluates project urgency and creates immediate technical resolutions.',
-            parameters: {
-              type: 'object',
-              properties: {
-                title: { type: 'string', description: 'The explicit description of the assignment action items.' },
-                assignedTo: { type: 'string', description: 'The Slack User ID string (e.g., U123AB). Extract from syntax.' },
-                priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH'], description: 'Critically evaluate textual engineering urgency/frustration or stack trace critical severity levels to set priority matrix.' },
-                suggestedNextSteps: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'Provide exactly 3 highly technical, concrete operational bullet points required to begin executing or resolving this specific task block.'
-                },
-                dueDate: { type: 'string', description: 'Optional ISO date string representation or format YYYY-MM-DD.' }
-              },
-              required: ['title', 'assignedTo', 'priority', 'suggestedNextSteps'],
-            },
-          },
-        },
-        {
-          type: 'function' as const,
-          function: {
-            name: 'getWorkspaceTasks',
-            description: 'Queries the database layer to fetch active registries or todos filtering this team ecosystem.',
-            parameters: {
-              type: 'object',
-              properties: {
-                targetUser: { type: 'string', description: 'Optional specific target Slack user identifier to query logs for.' }
-              }
-            },
-          },
-        },
-        {
-          type: 'function' as const,
-          function: {
-            name: 'updateTaskStatus',
-            description: 'Updates an existing task status field inside the remote MongoDB cluster.',
-            parameters: {
-              type: 'object',
-              properties: {
-                taskId: { type: 'string', description: 'The structural database object ID string.' },
-                status: { type: 'string', enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'], description: 'The target state mutation.' }
-              },
-              required: ['taskId', 'status'],
-            },
-          },
-        },
-      ];
 
       let response = await this.groq.chat.completions.create({
         messages: userHistory as any[],
