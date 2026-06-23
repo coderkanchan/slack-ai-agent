@@ -251,7 +251,6 @@ export class GroqService {
         model: 'llama-3.3-70b-versatile',
         temperature: 0.2,
         max_tokens: 700,
-        tools: tools as any[],
         tools: getGroqToolSchemas() as any[],
         tool_choice: 'auto',
       });
