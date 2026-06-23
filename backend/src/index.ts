@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
   logger.info({ socketId: socket.id, context: 'Socket Stream' }, '⚡ [Socket System] Client node connected securely.');
 
   socket.on('disconnect', () => {
-    logger.info({ socketId: socket.id, context: 'Socket Stream' }, '❌ [Socket System] Client node disconnected.');
+    logger.info({ socketId: socket.id, context: 'Socket System' }, '❌ [Socket System] Client node disconnected.');
   });
 });
 
