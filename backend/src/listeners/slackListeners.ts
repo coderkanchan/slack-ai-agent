@@ -139,13 +139,21 @@ export const registerSlackListeners = (slackApp: App): void => {
   });
 
   slackApp.message(async ({ message, client, ack }: any) => {
-    if (ack) await ack(); // Fast acknowledge to stop retry requests instantly
+    if (ack) await ack(); 
     const msgEvent = message as SlackMessageEvent;
+
     if (msgEvent.subtype && msgEvent.subtype === 'bot_message') return;
+    if ((msgEvent as any).bot_id) return; 
+
     if (!msgEvent.text || msgEvent.text.trim() === '' || !msgEvent.user) return;
 
-    const channelId = msgEvent.channel;
+    const isRetry = (msgEvent as any).headers?.['X-Slack-Retry-Num'] || (msgEvent as any).retry_num;
+    if (isRetry) {
+      logger.info({ messageId: msgEvent.ts }, '🛑 [Slack Retry Guard] Safely dropping duplicate retry stream packet.');
+      return;
+    }
 
+    const channelId = msgEvent.channel;
     const validUser: string = msgEvent.user;
     const validText: string = msgEvent.text.trim();
 
