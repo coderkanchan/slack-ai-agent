@@ -4,6 +4,7 @@ import { SearchService } from './search.js';
 import { TaskService } from './task.js';
 import { UserProfile } from '../models/UserProfile.js';
 import logger from '../utils/logger.js';
+import { getGroqToolSchemas, toolRegistry } from '../utils/agentTools.js';
 
 export class GroqService {
   private groq: Groq;
@@ -251,6 +252,7 @@ export class GroqService {
         temperature: 0.2,
         max_tokens: 700,
         tools: tools as any[],
+        tools: getGroqToolSchemas() as any[],
         tool_choice: 'auto',
       });
 
