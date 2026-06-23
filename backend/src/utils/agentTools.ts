@@ -21,7 +21,7 @@ export const techDocSearchTool: AgentToolExecutor = {
       }
     }
   },
-  execute: async ({ query, techStack }: { query: string; techStack?: string }) => {
+  execute: async ({ query, techStack }: { query: string; techStack?: string }): Promise<string> => {
     const docsDatabase: Record<string, string> = {
       'socket.io connection': '🔍 MDN/Socket.io Docs: Ensure CORS handles web-sockets explicitly. Web receiver configurations must enable server-side transport protocols explicitly.',
       'next.js server action': '🔍 Next.js 14 Docs: Server actions require the "use server" directive at the top of the execution layer or entry thread scope.',
@@ -30,10 +30,11 @@ export const techDocSearchTool: AgentToolExecutor = {
 
     const lowercaseQuery = query.toLowerCase();
     const matchedKey = Object.keys(docsDatabase).find(key => lowercaseQuery.includes(key));
-    
-    if (matchedKey) {
+
+    if (matchedKey && docsDatabase[matchedKey]) {
       return docsDatabase[matchedKey];
     }
+
     return `🔍 Autonomously scanned global repository networks for: "${query}". Found optimal diagnostic patch: Ensure dependency strict compilation modes are active.`;
   }
 };
