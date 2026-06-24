@@ -156,61 +156,104 @@ export const registerSlackListeners = (slackApp: App): void => {
     const channelId = msgEvent.channel;
     const validUser: string = msgEvent.user;
     const validText: string = msgEvent.text.trim();
+    const isDirectMessage = channelId.startsWith('D');
 
-    (async () => {
-      let loaderMessageTs = "";
+    if (!isDirectMessage) {
       try {
-        const loaderResult = await client.chat.postMessage({
-          channel: channelId,
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
-              }
-            }
-          ]
-        });
+        const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
-        loaderMessageTs = loaderResult.ts || "";
-
-        const aiResponsePayload = await aiOrchestrator.getChatResponse(validUser, validText, channelId);
-
-        if (loaderMessageTs) {
-          const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
-          const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
-
-          await client.chat.update({
+        if (telemetryAnalysis.vibeScore <= 70 || telemetryAnalysis.vibeStatus === 'STRESSED') {
+          await client.chat.postMessage({
             channel: channelId,
-            ts: loaderMessageTs,
-            text: sanitizedOutput.trim(),
-            blocks: aiResponsePayload.blocks
-          });
-          await broadcastDashboardUpdates();
-        }
-      } catch (error: any) {
-        logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
-        if (loaderMessageTs) {
-          const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
-
-          await client.chat.update({
-            channel: channelId,
-            ts: loaderMessageTs,
             blocks: [
               {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: isRateLimit
-                    ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
-                    : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+                  text: `🚨 *Autonomous VibeCheck Blocker Intervention*`
                 }
+              },
+              {
+                type: "context",
+                elements: [
+                  {
+                    type: "mrkdwn",
+                    text: `⚠️ *Detected High Developer Friction:* Dynamic sentiment analysis dropped to *${telemetryAnalysis.vibeScore}/100* [Status: *${telemetryAnalysis.vibeStatus}*].`
+                  }
+                ]
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
+                }
+              },
+              {
+                type: "divider"
               }
             ]
           });
+          await broadcastDashboardUpdates();
         }
+      } catch (passiveErr) {
+        logger.error({ passiveErr }, 'Error executing active passive evaluation listener channel loops');
       }
-    })();
+
+      return;
+    }
+
+    let loaderMessageTs = "";
+    try {
+      const loaderResult = await client.chat.postMessage({
+        channel: channelId,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
+            }
+          }
+        ]
+      });
+
+      loaderMessageTs = loaderResult.ts || "";
+      const aiResponsePayload = await aiOrchestrator.getChatResponse(validUser, validText, channelId);
+
+      if (loaderMessageTs) {
+        const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
+        const sanitizedOutput = textOutput.replace(/^getting,\s*/i, '');
+
+        await client.chat.update({
+          channel: channelId,
+          ts: loaderMessageTs,
+          text: sanitizedOutput.trim(),
+          blocks: aiResponsePayload.blocks
+        });
+        await broadcastDashboardUpdates();
+      }
+    } catch (error: any) {
+      logger.error({ error, context: 'Slack Listeners' }, '[Slack Listeners] Direct Message processing exception:');
+      if (loaderMessageTs) {
+        const isRateLimit = error?.message?.includes('429') || JSON.stringify(error).includes('rate_limit');
+
+        await client.chat.update({
+          channel: channelId,
+          ts: loaderMessageTs,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: isRateLimit
+                  ? `⚠️ *VibeCheck System Alert:* AI Engine processing capacity exhausted (Groq 429 Rate Limit). Trying to recover...`
+                  : `⚠️ *VibeCheck System Alert:* Local node communication interrupted. Please check back shortly.`
+              }
+            }
+          ]
+        });
+      }
+    }
   });
 };
