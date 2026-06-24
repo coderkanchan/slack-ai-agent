@@ -139,11 +139,11 @@ export const registerSlackListeners = (slackApp: App): void => {
   });
 
   slackApp.message(async ({ message, client, ack }: any) => {
-    if (ack) await ack(); 
+    if (ack) await ack();
     const msgEvent = message as SlackMessageEvent;
 
     if (msgEvent.subtype && msgEvent.subtype === 'bot_message') return;
-    if ((msgEvent as any).bot_id) return; 
+    if ((msgEvent as any).bot_id) return;
 
     if (!msgEvent.text || msgEvent.text.trim() === '' || !msgEvent.user) return;
 
