@@ -160,9 +160,10 @@ export const registerSlackListeners = (slackApp: App): void => {
 
     if (!isDirectMessage) {
       try {
+        if (validText.length < 8) return;
         const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
-        if (telemetryAnalysis.vibeScore <= 70 || telemetryAnalysis.vibeStatus === 'STRESSED') {
+        if (telemetryAnalysis.vibeScore <= 50 || telemetryAnalysis.vibeStatus === 'STRESSED') {
           await client.chat.postMessage({
             channel: channelId,
             blocks: [
@@ -178,7 +179,7 @@ export const registerSlackListeners = (slackApp: App): void => {
                 elements: [
                   {
                     type: "mrkdwn",
-                    text: `⚠️ *Detected High Developer Friction:* Dynamic sentiment analysis dropped to *${telemetryAnalysis.vibeScore}/100* [Status: *${telemetryAnalysis.vibeStatus}*].`
+                    text: `📊 *Workspace Analytics:* Dynamic sentiment analysis - Vibe Score: \`${telemetryAnalysis.vibeScore}/100\` | Status: *${telemetryAnalysis.vibeStatus}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
                   }
                 ]
               },
@@ -199,7 +200,6 @@ export const registerSlackListeners = (slackApp: App): void => {
       } catch (passiveErr) {
         logger.error({ passiveErr }, 'Error executing active passive evaluation listener channel loops');
       }
-
       return;
     }
 
