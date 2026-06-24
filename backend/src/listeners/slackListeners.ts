@@ -45,7 +45,7 @@ export const registerSlackListeners = (slackApp: App): void => {
       }
     })();
   });
-
+  
   slackApp.command('/vibecheck', async ({ command, ack, client }: any) => {
     await ack();
     const userPrompt: string = command.text.trim();
@@ -162,53 +162,71 @@ export const registerSlackListeners = (slackApp: App): void => {
       try {
         const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
-        // 🧠 DEEP CONTEXT CHECK: Ab AI tay karega ki intervene karna hai ya nahi!
         if (telemetryAnalysis.intervene === true) {
           const analyticsPayload = JSON.stringify({
             score: telemetryAnalysis.vibeScore,
             status: telemetryAnalysis.vibeStatus
           });
 
-          await client.chat.postMessage({
+          const loaderResult = await client.chat.postMessage({
             channel: channelId,
             blocks: [
               {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: `🚨 *Autonomous VibeCheck Blocker Intervention*`
+                  text: `🚨 *VibeCheck Blocker Intervention Triggered...*\n⏳ _Thinking... Generating production diagnostic patch loops..._`
                 }
-              },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
-                }
-              },
-              {
-                type: "actions",
-                block_id: "analytics_toggle_block",
-                elements: [
-                  {
-                    type: "button",
-                    text: {
-                      type: "plain_text",
-                      text: "🔽 Show Analytics Metrics",
-                      emoji: true
-                    },
-                    style: "primary",
-                    value: analyticsPayload,
-                    action_id: "toggle_analytics_view"
-                  }
-                ],
-              },
-              {
-                type: "divider"
               }
             ]
           });
-          await broadcastDashboardUpdates();
+
+          const loaderMessageTs = loaderResult.ts || "";
+
+          if (loaderMessageTs) {
+            await client.chat.update({
+              channel: channelId,
+              ts: loaderMessageTs,
+              text: `🚨 Autonomous VibeCheck Blocker Intervention Complete`,
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: `🚨 *Autonomous VibeCheck Blocker Intervention*`
+                  }
+                },
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
+                  }
+                },
+                {
+                  type: "actions",
+                  block_id: "analytics_toggle_block",
+                  elements: [
+                    {
+                      type: "button",
+                      text: {
+                        type: "plain_text",
+                        text: "🔽 Show Analytics Metrics",
+                        emoji: true
+                      },
+                      style: "primary",
+                      value: analyticsPayload,
+                      action_id: "toggle_analytics_view"
+                    }
+                  ],
+                },
+                {
+                  type: "divider"
+                }
+              ]
+            });
+            await broadcastDashboardUpdates();
+          }
         }
       } catch (passiveErr) {
         logger.error({ passiveErr }, 'Error executing active passive evaluation listener channel loops');
@@ -275,11 +293,30 @@ export const registerSlackListeners = (slackApp: App): void => {
     try {
       let currentBlocks = [...body.message.blocks];
       const buttonValue = JSON.parse(action.value);
+      
       const isExpanded = action.text.text.includes("Hide");
 
+      const actionsIdx = currentBlocks.findIndex((b: any) => b.block_id === "analytics_toggle_block");
+
       if (!isExpanded) {
-        action.text.text = "🔼 Hide Analytics Metrics";
-        action.style = undefined;
+        if (actionsIdx !== -1) {
+          currentBlocks[actionsIdx] = {
+            type: "actions",
+            block_id: "analytics_toggle_block",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "🔼 Hide Analytics Metrics",
+                  emoji: true
+                },
+                value: action.value,
+                action_id: "toggle_analytics_view"
+              }
+            ]
+          };
+        }
 
         const analyticsBlock = {
           type: "context",
@@ -292,15 +329,31 @@ export const registerSlackListeners = (slackApp: App): void => {
           ]
         };
 
-        const actionsIdx = currentBlocks.findIndex((b: any) => b.block_id === "analytics_toggle_block");
         if (actionsIdx !== -1) {
           currentBlocks.splice(actionsIdx, 0, analyticsBlock);
         } else {
           currentBlocks.push(analyticsBlock);
         }
       } else {
-        action.text.text = "🔽 Show Analytics Metrics";
-        action.style = "primary";
+        if (actionsIdx !== -1) {
+          currentBlocks[actionsIdx] = {
+            type: "actions",
+            block_id: "analytics_toggle_block",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "🔽 Show Analytics Metrics",
+                  emoji: true
+                },
+                style: "primary",
+                value: action.value,
+                action_id: "toggle_analytics_view"
+              }
+            ]
+          };
+        }
 
         currentBlocks = currentBlocks.filter((b: any) => b.block_id !== "dynamic_metrics_layer");
       }
