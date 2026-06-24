@@ -45,7 +45,7 @@ export const registerSlackListeners = (slackApp: App): void => {
       }
     })();
   });
-  
+
   slackApp.command('/vibecheck', async ({ command, ack, client }: any) => {
     await ack();
     const userPrompt: string = command.text.trim();
@@ -293,8 +293,8 @@ export const registerSlackListeners = (slackApp: App): void => {
     try {
       let currentBlocks = [...body.message.blocks];
       const buttonValue = JSON.parse(action.value);
-      
-      const isExpanded = action.text.text.includes("Hide");
+
+      const isExpanded = currentBlocks.some((b: any) => b.block_id === "dynamic_metrics_layer");
 
       const actionsIdx = currentBlocks.findIndex((b: any) => b.block_id === "analytics_toggle_block");
 
