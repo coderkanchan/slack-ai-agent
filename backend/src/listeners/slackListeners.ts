@@ -164,6 +164,10 @@ export const registerSlackListeners = (slackApp: App): void => {
         const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
         if (telemetryAnalysis.vibeScore <= 50 || telemetryAnalysis.vibeStatus === 'STRESSED') {
+          const analyticsPayload = JSON.stringify({
+            score: telemetryAnalysis.vibeScore,
+            status: telemetryAnalysis.vibeStatus
+          });
           await client.chat.postMessage({
             channel: channelId,
             blocks: [
@@ -175,21 +179,38 @@ export const registerSlackListeners = (slackApp: App): void => {
                 }
               },
               {
-                type: "context",
+                type: "actions",
+                block_id: "analytics_toggle_block",
                 elements: [
                   {
-                    type: "mrkdwn",
-                    text: `📊 *Workspace Analytics:* Dynamic sentiment analysis - Vibe Score: \`${telemetryAnalysis.vibeScore}/100\` | Status: *${telemetryAnalysis.vibeStatus}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
+                    type: "button",
+                    text: {
+                      type: "plain_text",
+                      text: "🔽 Show Analytics Metrics",
+                      emoji: true
+                    },
+                    style: "primary",
+                    value: analyticsPayload,
+                    action_id: "toggle_analytics_view"
                   }
-                ]
+                ],
               },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
-                }
-              },
+              // {
+              //   type: "context",
+              //   elements: [
+              //     {
+              //       type: "mrkdwn",
+              //       text: `📊 *Workspace Analytics:* Dynamic sentiment analysis - Vibe Score: \`${telemetryAnalysis.vibeScore}/100\` | Status: *${telemetryAnalysis.vibeStatus}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
+              //     }
+              //   ]
+              // },
+              // {
+              //   type: "section",
+              //   text: {
+              //     type: "mrkdwn",
+              //     text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
+              //   }
+              // },
               {
                 type: "divider"
               }
@@ -254,6 +275,49 @@ export const registerSlackListeners = (slackApp: App): void => {
           ]
         });
       }
+    }
+  });
+
+  slackApp.action("toggle_analytics_view", async ({ ack, action, body, client }: any) => {
+    await ack();
+    try {
+      const currentBlocks = body.message.blocks;
+      const buttonValue = JSON.parse(action.value);
+      const isExpanded = action.text.text.includes("Hide");
+
+      if (!isExpanded) {
+        const analyticsBlock = {
+          type: "context",
+          block_id: "dynamic_metrics_layer",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `📊 *Workspace Analytics:* Vibe Score: \`${buttonValue.score}/100\` | Status: *${buttonValue.status}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
+            }
+          ]
+        };
+
+        action.text.text = "🔼 Hide Analytics Metrics";
+        action.style = undefined; 
+
+        currentBlocks.splice(1, 0, analyticsBlock);
+      } else {
+        const blockIndex = currentBlocks.findIndex((b: any) => b.block_id === "dynamic_metrics_layer");
+        if (blockIndex !== -1) {
+          currentBlocks.splice(blockIndex, 1);
+        }
+        action.text.text = "🔽 Show Analytics Metrics";
+        action.style = "primary";
+      }
+
+      await client.chat.update({
+        channel: body.channel.id,
+        ts: body.message.ts,
+        blocks: currentBlocks
+      });
+
+    } catch (err) {
+      logger.error({ err }, "Failed to handle interactive UI block toggle action streams");
     }
   });
 };
