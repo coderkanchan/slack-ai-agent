@@ -163,7 +163,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         if (validText.length < 8) return;
         const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
-        if (telemetryAnalysis.vibeScore <= 50 || telemetryAnalysis.vibeStatus === 'STRESSED') {
+        if (telemetryAnalysis.vibeScore <= 50 && telemetryAnalysis.vibeStatus === 'STRESSED') {
           const analyticsPayload = JSON.stringify({
             score: telemetryAnalysis.vibeScore,
             status: telemetryAnalysis.vibeStatus
@@ -176,6 +176,13 @@ export const registerSlackListeners = (slackApp: App): void => {
                 text: {
                   type: "mrkdwn",
                   text: `🚨 *Autonomous VibeCheck Blocker Intervention*`
+                }
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
                 }
               },
               {
@@ -195,22 +202,6 @@ export const registerSlackListeners = (slackApp: App): void => {
                   }
                 ],
               },
-              // {
-              //   type: "context",
-              //   elements: [
-              //     {
-              //       type: "mrkdwn",
-              //       text: `📊 *Workspace Analytics:* Dynamic sentiment analysis - Vibe Score: \`${telemetryAnalysis.vibeScore}/100\` | Status: *${telemetryAnalysis.vibeStatus}* | Engine: \`Llama-3.3-70b\` | Budget: \`Free-Tier\``
-              //     }
-              //   ]
-              // },
-              // {
-              //   type: "section",
-              //   text: {
-              //     type: "mrkdwn",
-              //     text: `👋 Hey team, I noticed some architectural road-blocks in this thread. Here is an autonomous recommendations patch:\n\n${telemetryAnalysis.adviceText}`
-              //   }
-              // },
               {
                 type: "divider"
               }
@@ -298,7 +289,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         };
 
         action.text.text = "🔼 Hide Analytics Metrics";
-        action.style = undefined; 
+        action.style = undefined;
 
         currentBlocks.splice(1, 0, analyticsBlock);
       } else {
