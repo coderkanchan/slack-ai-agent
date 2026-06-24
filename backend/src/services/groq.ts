@@ -102,20 +102,26 @@ export class GroqService {
     ];
   }
 
-  public async analyzePassiveMessage(userId: string, userMessage: string): Promise<{ vibeScore: number; vibeStatus: string; adviceText: string }> {
+  public async analyzePassiveMessage(userId: string, userMessage: string): Promise<{ vibeScore: number; vibeStatus: string; intervene: boolean; adviceText: string }> {
     try {
       let profile = await UserProfile.findOne({ slackUserId: userId });
-      const prompt = `Analyze this live developer chat input for mental stress, architectural friction, or tool-related runtime blocks.
+
+      const prompt = `You are an expert workspace intelligence layer tracking live team communication context.
+      Analyze this live user chat input for technical blocks, runtime crashes, architectural frustration, or code errors.
+
       Input: "${userMessage}"
       
       You must respond strictly with a valid JSON block containing:
       {
         "vibeScore": number (0-100),
         "vibeStatus": "OPTIMAL" | "NEUTRAL" | "STRESSED",
-        "adviceText": "Provide a brief 1-2 sentence hyper-technical recommendation code fix if they are facing an error or stressed."
+        "intervene": boolean,
+        "adviceText": "string containing a 1-2 sentence clean architectural recommendation patch if intervene is true, else keep it empty"
       }
-      Rules:
-      - Frustrated keywords or error logs must drop score below 70 and set status to STRESSED.
+      
+      Rules for 'intervene' property (CRITICAL):
+      - Set "intervene" to true ONLY if the message contains explicit code errors, runtime stack traces, production infrastructure panics (e.g., database transaction failures, socket connection timeouts, memory leaks), or high technical developer blockers.
+      - Set "intervene" to false for standard greetings ("hi", "hello"), casual team talk, acknowledgement ("ok", "okay", "acha", "oh"), or conversational check-ins ("what happened", "any updates?").
       - Return absolute raw JSON only. No prose. No markdown wrapper.`;
 
       const analysisResponse = await this.groq.chat.completions.create({
@@ -129,6 +135,7 @@ export class GroqService {
 
       const computedScore = parsedData.vibeScore ?? (profile?.vibeScore || 100);
       const computedStatus = parsedData.vibeStatus ?? (profile?.vibeStatus || 'OPTIMAL');
+      const shouldIntervene = parsedData.intervene ?? false;
       const adviceText = parsedData.adviceText || 'Maintain stable codebase execution architectures.';
 
       if (profile) {
@@ -138,10 +145,10 @@ export class GroqService {
         await profile.save();
       }
 
-      return { vibeScore: computedScore, vibeStatus: computedStatus, adviceText };
+      return { vibeScore: computedScore, vibeStatus: computedStatus, intervene: shouldIntervene, adviceText };
     } catch (err) {
       logger.error({ err }, 'Error executing background user passive processing pipeline');
-      return { vibeScore: 100, vibeStatus: 'OPTIMAL', adviceText: '' };
+      return { vibeScore: 100, vibeStatus: 'OPTIMAL', intervene: false, adviceText: '' };
     }
   }
 
