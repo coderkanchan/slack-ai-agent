@@ -160,14 +160,15 @@ export const registerSlackListeners = (slackApp: App): void => {
 
     if (!isDirectMessage) {
       try {
-        if (validText.length < 8) return;
         const telemetryAnalysis = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
-        if (telemetryAnalysis.vibeScore <= 50 && telemetryAnalysis.vibeStatus === 'STRESSED') {
+        // 🧠 DEEP CONTEXT CHECK: Ab AI tay karega ki intervene karna hai ya nahi!
+        if (telemetryAnalysis.intervene === true) {
           const analyticsPayload = JSON.stringify({
             score: telemetryAnalysis.vibeScore,
             status: telemetryAnalysis.vibeStatus
           });
+
           await client.chat.postMessage({
             channel: channelId,
             blocks: [
