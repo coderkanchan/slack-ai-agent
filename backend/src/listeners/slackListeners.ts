@@ -273,11 +273,14 @@ export const registerSlackListeners = (slackApp: App): void => {
   slackApp.action("toggle_analytics_view", async ({ ack, action, body, client }: any) => {
     await ack();
     try {
-      const currentBlocks = body.message.blocks;
+      let currentBlocks = [...body.message.blocks];
       const buttonValue = JSON.parse(action.value);
       const isExpanded = action.text.text.includes("Hide");
 
       if (!isExpanded) {
+        action.text.text = "🔼 Hide Analytics Metrics";
+        action.style = undefined;
+
         const analyticsBlock = {
           type: "context",
           block_id: "dynamic_metrics_layer",
@@ -289,17 +292,17 @@ export const registerSlackListeners = (slackApp: App): void => {
           ]
         };
 
-        action.text.text = "🔼 Hide Analytics Metrics";
-        action.style = undefined;
-
-        currentBlocks.splice(1, 0, analyticsBlock);
-      } else {
-        const blockIndex = currentBlocks.findIndex((b: any) => b.block_id === "dynamic_metrics_layer");
-        if (blockIndex !== -1) {
-          currentBlocks.splice(blockIndex, 1);
+        const actionsIdx = currentBlocks.findIndex((b: any) => b.block_id === "analytics_toggle_block");
+        if (actionsIdx !== -1) {
+          currentBlocks.splice(actionsIdx, 0, analyticsBlock);
+        } else {
+          currentBlocks.push(analyticsBlock);
         }
+      } else {
         action.text.text = "🔽 Show Analytics Metrics";
         action.style = "primary";
+
+        currentBlocks = currentBlocks.filter((b: any) => b.block_id !== "dynamic_metrics_layer");
       }
 
       await client.chat.update({
