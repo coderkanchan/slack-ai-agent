@@ -144,7 +144,6 @@ export class GroqService {
         profile.updatedAt = new Date();
         await profile.save();
       }
-
       return { vibeScore: computedScore, vibeStatus: computedStatus, intervene: shouldIntervene, adviceText };
     } catch (err) {
       logger.error({ err }, 'Error executing background user passive processing pipeline');
