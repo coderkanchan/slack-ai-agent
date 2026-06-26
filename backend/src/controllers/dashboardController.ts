@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { TaskModel } from '../models/Task.js';
 import { broadcastDashboardUpdates } from '../utils/telemetry.js';
 import logger from '../utils/logger.js';
+import { slackApp } from '../index.js';
 
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -37,7 +38,8 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { taskId, newStatus } = req.body;
+    const taskId = req.params.id;
+    const newStatus = 'COMPLETED';
 
     const updatedTask = await TaskModel.findByIdAndUpdate(
       taskId,
@@ -55,6 +57,18 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
     logger.info({ taskId, newStatus }, 'Task pipeline state transitioned via REST API handler.');
 
     await broadcastDashboardUpdates();
+
+    try {
+      const targetChannel = process.env.SLACK_CHANNEL_ID || 'general';
+
+      await slackApp.client.chat.postMessage({
+        channel: targetChannel,
+        text: `✅ *Resolution Telemetry Event*\n\n• *Task Resolved:* \`${updatedTask.title}\`\n• *Status Change:* \`PENDING\` ➔ *_\`COMPLETED\`_*\n• *Trigger Source:* \`VibeCheck Enterprise Panel Operations Layer\``
+      });
+      logger.info({ taskId }, 'Slack resolution alert dispatched successfully.');
+    } catch (slackError) {
+      logger.error({ slackError }, 'Failed to dispatch notification over Slack matrix thread.');
+    }
 
     return res.status(200).json({
       success: true,
