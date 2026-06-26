@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/analytics', validateRequest(analyticsQuerySchema), getDashboardAnalytics);
 
-router.put('/update-status', validateRequest(updateTaskStatusSchema), updateTaskStatus);
+//router.put('/update-status', validateRequest(updateTaskStatusSchema), updateTaskStatus);
+router.post('/resolve/:id', updateTaskStatus);
 
 export default router;
