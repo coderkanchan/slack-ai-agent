@@ -1,10 +1,12 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
+import { dashboardService } from '@/services/api';
 
 interface Task {
   _id: string;
   title: string;
   status: string;
-  assignedTo?: string; 
+  assignedTo?: string;
 }
 
 interface RegistryProps {
@@ -12,6 +14,23 @@ interface RegistryProps {
 }
 
 export const TaskRegistry: React.FC<RegistryProps> = ({ tasks }) => {
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+
+  const handleActionTrigger = async (taskId: string) => {
+    setResolvingId(taskId);
+    try {
+      const response = await dashboardService.resolveTask(taskId);
+      if (response.success) {
+        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} resolved securely.`);
+      }
+    } catch (err) {
+      console.error('Action pipeline resolution failure:', err);
+      alert('Failed to transmit telemetry resolution signal.');
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center">
@@ -28,12 +47,22 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks }) => {
                   <span>Assignee Node: <span className="text-slate-400">{task.assignedTo || 'Unassigned'}</span></span>
                 </div>
               </div>
-              <span className={`px-2.5 py-1 rounded text-xs font-black tracking-wider border ${task.status === 'COMPLETED'
-                  ? 'bg-indigo-950/40 border-indigo-800 text-indigo-400'
-                  : 'bg-amber-950/40 border-amber-800 text-amber-400'
-                }`}>
-                {task.status}
-              </span>
+
+              {task.status === 'COMPLETED' ? (
+                <span className="px-2.5 py-1 rounded text-xs font-black tracking-wider border bg-indigo-950/40 border-indigo-800 text-indigo-400">
+                  {task.status}
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleActionTrigger(task._id)}
+                  disabled={resolvingId === task._id}
+                  className={`px-3 py-1.5 rounded text-xs font-black tracking-wider border border-amber-500 text-amber-400 bg-amber-950/20 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-400 transition-all duration-200 shadow-md cursor-pointer ${resolvingId === task._id ? 'opacity-50 cursor-wait animate-pulse' : ''
+                    }`}
+                >
+                  {resolvingId === task._id ? 'RESOLVING ENGINE...' : 'MARK RESOLVED'}
+                </button>
+              )}
+
             </div>
           ))
         ) : (
