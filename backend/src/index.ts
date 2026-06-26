@@ -93,3 +93,5 @@ io.on('connection', (socket) => {
     process.exit(1);
   }
 })();
+
+export { slackApp };
