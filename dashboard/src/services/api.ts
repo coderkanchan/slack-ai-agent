@@ -1,7 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 export interface DashboardData {
-  
+
   metrics: {
     totalTasks: number;
     completedTasks: number;
@@ -21,7 +21,7 @@ export const dashboardService = {
   getAnalytics: async (): Promise<DashboardData> => {
 
     const response = await fetch(`${API_BASE_URL}/api/dashboard/analytics`, {
-      cache: 'no-store', 
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -33,4 +33,19 @@ export const dashboardService = {
 
     return data;
   },
+
+  resolveTask: async (taskId: string): Promise<{ success: boolean; message?: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/resolve/${taskId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to synchronize status alteration over telemetry stream');
+    }
+
+    return response.json();
+  }
 };
