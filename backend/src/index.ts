@@ -51,6 +51,14 @@ app.use(cors({
   credentials: true
 }));
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    message: "VibeCheck Bot Server is fully active and awake!",
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.use('/api/dashboard', dashboardRoutes);
 
 registerSlackListeners(slackApp);
