@@ -12,6 +12,9 @@ interface SlackMessageEvent {
   user?: string;
 }
 
+// ⏳ Helper function to enforce premium transition pacing
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const registerSlackListeners = (slackApp: App): void => {
   const aiOrchestrator = new GroqService();
 
@@ -29,21 +32,34 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loadingMessageTs = '';
       try {
+        // STEP 1: Render Initial Active State
         const loaderResult = await client.chat.postMessage({
-          channel: channelId, text: '⚙️ *Agent Node Activated:*\n⏳ [STEP 1/3] Intercepting command and syncing session tokens...'
+          channel: channelId,
+          text: '⚙️ *Agent Node Activated:*\n⏳ [STEP 1/3] Intercepting command and syncing session tokens...'
         });
 
         loadingMessageTs = loaderResult.ts || '';
+        await sleep(650); // Pacing delay before step 2
 
+        // STEP 2: Show Step 1 Complete & Trigger Parallel Core API Call
         await client.chat.update({
-          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n⏳ [STEP 2/3] Querying LLaMA-3 via Groq for analytical resolution context...'
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n⏳ [STEP 2/3] Querying LLaMA-3 via Groq for analytical resolution context...'
         });
 
-        const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
+        const aiResultPromise = aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
+        await sleep(750); // Dynamic reading frame pause
+        const aiResult = await aiResultPromise;
 
+        // STEP 3: Advance to Data Formatting Layout Packaging
         await client.chat.update({
-          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n✅ [STEP 2/3] Resolution context extracted.\n⏳ [STEP 3/3] Transforming payload structure logs into user-friendly interface...'
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n✅ [STEP 2/3] Resolution context extracted.\n⏳ [STEP 3/3] Transforming payload structure logs into user-friendly interface...'
         });
+
+        await sleep(550); // Short dramatic transition before rendering final payload
 
         await client.chat.update({
           channel: channelId,
@@ -69,24 +85,34 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loadingMessageTs = '';
       try {
+        // STEP 1: Initialize Node Buffers
         const loaderResult = await client.chat.postMessage({
           channel: channelId,
           text: '⚙️ *Telemetry Audit Started:*\n⏳ [STEP 1/3] Allocating active system buffer nodes...'
         });
 
         loadingMessageTs = loaderResult.ts || '';
+        await sleep(650);
 
+        // STEP 2: Start Inference Evaluation Matrix
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
           text: '⚙️ *Telemetry Audit Started:*\n✅ [STEP 1/3] Buffer nodes allocated securely.\n⏳ [STEP 2/3] Parsing workspace vibe factors via AI processing cluster...'
         });
 
-        const aiResult = await aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
+        const aiResultPromise = aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
+        await sleep(750);
+        const aiResult = await aiResultPromise;
 
+        // STEP 3: Setup Metric Charts & Rendering Layers
         await client.chat.update({
-          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Telemetry Audit Started:*\n✅ [STEP 1/3] Buffer nodes allocated securely.\n✅ [STEP 2/3] Workspace vibe factors successfully parsed.\n⏳ [STEP 3/3] Generating operational charts and analytics models...'
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: '⚙️ *Telemetry Audit Started:*\n✅ [STEP 1/3] Buffer nodes allocated securely.\n✅ [STEP 2/3] Workspace vibe factors successfully parsed.\n⏳ [STEP 3/3] Generating operational charts and analytics models...'
         });
+
+        await sleep(550);
 
         await client.chat.update({
           channel: channelId,
@@ -109,6 +135,7 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loaderMessageTs = "";
       try {
+        // STEP 1: Mention Hook Handshake
         const loaderResult = await client.chat.postMessage({
           channel: event.channel,
           blocks: [
@@ -123,7 +150,9 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
 
         loaderMessageTs = loaderResult.ts || "";
+        await sleep(650);
 
+        // STEP 2: Request Dispatched Notice
         await client.chat.update({
           channel: event.channel,
           ts: loaderMessageTs,
@@ -138,8 +167,11 @@ export const registerSlackListeners = (slackApp: App): void => {
           ]
         });
 
-        const reply = await aiOrchestrator.getChatResponse(event.user, cleanMessage, event.channel);
+        const replyPromise = aiOrchestrator.getChatResponse(event.user, cleanMessage, event.channel);
+        await sleep(750);
+        const reply = await replyPromise;
 
+        // STEP 3: Response Array Alignment
         await client.chat.update({
           channel: event.channel,
           ts: loaderMessageTs,
@@ -153,6 +185,8 @@ export const registerSlackListeners = (slackApp: App): void => {
             }
           ]
         });
+
+        await sleep(550);
 
         if (loaderMessageTs) {
           const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
@@ -196,7 +230,6 @@ export const registerSlackListeners = (slackApp: App): void => {
 
     if (msgEvent.subtype && msgEvent.subtype === 'bot_message') return;
     if ((msgEvent as any).bot_id) return;
-
     if (!msgEvent.text || msgEvent.text.trim() === '' || !msgEvent.user) return;
 
     const isRetry = (msgEvent as any).headers?.['X-Slack-Retry-Num'] || (msgEvent as any).retry_num;
@@ -220,6 +253,7 @@ export const registerSlackListeners = (slackApp: App): void => {
             status: telemetryAnalysis.vibeStatus
           });
 
+          // STEP 1: Autonomous Intervention Init
           const loaderResult = await client.chat.postMessage({
             channel: channelId,
             blocks: [
@@ -237,6 +271,9 @@ export const registerSlackListeners = (slackApp: App): void => {
           const loaderMessageTs = loaderResult.ts || "";
 
           if (loaderMessageTs) {
+            await sleep(650);
+
+            // STEP 2: Analyze & Engine Process
             await client.chat.update({
               channel: channelId,
               ts: loaderMessageTs,
@@ -252,6 +289,9 @@ export const registerSlackListeners = (slackApp: App): void => {
               ]
             });
 
+            await sleep(850); // Slightly deeper analysis pacing window
+
+            // STEP 3: Ready DB Cluster Persistence Write
             await client.chat.update({
               channel: channelId,
               ts: loaderMessageTs,
@@ -266,6 +306,8 @@ export const registerSlackListeners = (slackApp: App): void => {
                 }
               ]
             });
+
+            await sleep(550);
 
             await client.chat.update({
               channel: channelId,
@@ -317,8 +359,10 @@ export const registerSlackListeners = (slackApp: App): void => {
       return;
     }
 
+    // Direct Messages Flow
     let loaderMessageTs = "";
     try {
+      // STEP 1: Handshake Node Sync
       const loaderResult = await client.chat.postMessage({
         channel: channelId,
         blocks: [
@@ -331,9 +375,10 @@ export const registerSlackListeners = (slackApp: App): void => {
           }
         ]
       });
-
       loaderMessageTs = loaderResult.ts || "";
+      await sleep(650);
 
+      // STEP 2: Segment Network Routing
       await client.chat.update({
         channel: channelId,
         ts: loaderMessageTs,
@@ -348,8 +393,11 @@ export const registerSlackListeners = (slackApp: App): void => {
         ]
       });
 
-      const aiResponsePayload = await aiOrchestrator.getChatResponse(validUser, validText, channelId);
+      const aiResponsePayloadPromise = aiOrchestrator.getChatResponse(validUser, validText, channelId);
+      await sleep(750);
+      const aiResponsePayload = await aiResponsePayloadPromise;
 
+      // STEP 3: Structuring Block Templates
       await client.chat.update({
         channel: channelId,
         ts: loaderMessageTs,
@@ -363,6 +411,8 @@ export const registerSlackListeners = (slackApp: App): void => {
           }
         ]
       });
+
+      await sleep(550);
 
       if (loaderMessageTs) {
         const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
@@ -407,7 +457,6 @@ export const registerSlackListeners = (slackApp: App): void => {
       const buttonValue = JSON.parse(action.value);
 
       const isExpanded = currentBlocks.some((b: any) => b.block_id === "dynamic_metrics_layer");
-
       const actionsIdx = currentBlocks.findIndex((b: any) => b.block_id === "analytics_toggle_block");
 
       if (!isExpanded) {
@@ -418,11 +467,7 @@ export const registerSlackListeners = (slackApp: App): void => {
             elements: [
               {
                 type: "button",
-                text: {
-                  type: "plain_text",
-                  text: "🔼 Hide Analytics Metrics",
-                  emoji: true
-                },
+                text: { type: "plain_text", text: "🔼 Hide Analytics Metrics", emoji: true },
                 value: action.value,
                 action_id: "toggle_analytics_view"
               }
@@ -454,11 +499,7 @@ export const registerSlackListeners = (slackApp: App): void => {
             elements: [
               {
                 type: "button",
-                text: {
-                  type: "plain_text",
-                  text: "🔽 Show Analytics Metrics",
-                  emoji: true
-                },
+                text: { type: "plain_text", text: "🔽 Show Analytics Metrics", emoji: true },
                 style: "primary",
                 value: action.value,
                 action_id: "toggle_analytics_view"
@@ -466,7 +507,6 @@ export const registerSlackListeners = (slackApp: App): void => {
             ]
           };
         }
-
         currentBlocks = currentBlocks.filter((b: any) => b.block_id !== "dynamic_metrics_layer");
       }
 
@@ -475,7 +515,6 @@ export const registerSlackListeners = (slackApp: App): void => {
         ts: body.message.ts,
         blocks: currentBlocks
       });
-
     } catch (err) {
       logger.error({ err }, "Failed to handle interactive UI block toggle action streams");
     }
