@@ -346,10 +346,8 @@ export const registerSlackListeners = (slackApp: App): void => {
       return;
     }
 
-    // Direct Messages Flow
     let loaderMessageTs = "";
     try {
-      // STEP 1: Handshake Node Sync
       const loaderResult = await client.chat.postMessage({
         channel: channelId,
         blocks: [
@@ -365,7 +363,6 @@ export const registerSlackListeners = (slackApp: App): void => {
       loaderMessageTs = loaderResult.ts || "";
       await sleep(650);
 
-      // STEP 2: Segment Network Routing
       await client.chat.update({
         channel: channelId,
         ts: loaderMessageTs,
@@ -384,7 +381,6 @@ export const registerSlackListeners = (slackApp: App): void => {
       await sleep(750);
       const aiResponsePayload = await aiResponsePayloadPromise;
 
-      // STEP 3: Structuring Block Templates
       await client.chat.update({
         channel: channelId,
         ts: loaderMessageTs,
