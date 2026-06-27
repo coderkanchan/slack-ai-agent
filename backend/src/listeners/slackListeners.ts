@@ -116,14 +116,43 @@ export const registerSlackListeners = (slackApp: App): void => {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `⏳ *VibeCheck-Bot is thinking...*\n• _Interpreting workspace mention loops..._`
+                text: `⚙️ *VibeCheck-Bot Core Activated:*\n⏳ *[STEP 1/3]* Establishing direct connection context block pointers...`
               }
             }
           ]
         });
 
         loaderMessageTs = loaderResult.ts || "";
+
+        await client.chat.update({
+          channel: event.channel,
+          ts: loaderMessageTs,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `⚙️ *VibeCheck-Bot Core Activated:*\n✅ *[STEP 1/3]* Connection context blocks compiled.\n⏳ *[STEP 2/3]* Dispatched query packet downstream to Groq Inference Cloud...`
+              }
+            }
+          ]
+        });
+
         const reply = await aiOrchestrator.getChatResponse(event.user, cleanMessage, event.channel);
+
+        await client.chat.update({
+          channel: event.channel,
+          ts: loaderMessageTs,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `⚙️ *VibeCheck-Bot Core Activated:*\n✅ *[STEP 1/3]* Connection context blocks compiled.\n✅ *[STEP 2/3]* Groq Inference Cloud returned response payload.\n⏳ *[STEP 3/3]* Redirection of UI matrix threads into active channel view...`
+              }
+            }
+          ]
+        });
 
         if (loaderMessageTs) {
           const textOutput = typeof reply === 'string' ? reply : (reply.text || '');
