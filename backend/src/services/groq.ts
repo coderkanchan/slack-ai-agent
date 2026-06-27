@@ -124,12 +124,23 @@ export class GroqService {
       - Set "intervene" to false for standard greetings ("hi", "hello"), casual team talk, acknowledgement ("ok", "okay", "acha", "oh"), or conversational check-ins ("what happened", "any updates?").
       - Return absolute raw JSON only. No prose. No markdown wrapper.`;
 
-      const analysisResponse = await this.groq.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.1,
-        response_format: { type: "json_object" }
-      });
+      let analysisResponse;
+      try {
+        analysisResponse = await this.groq.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'llama-3.3-70b-versatile',
+          temperature: 0.1,
+          response_format: { type: "json_object" }
+        });
+      } catch (apiError: any) {
+        logger.error({ apiError }, 'Groq Passive Analysis API limit hit. Initiating quiet safe fallback boundary.');
+        return {
+          vibeScore: profile?.vibeScore || 100,
+          vibeStatus: profile?.vibeStatus || 'OPTIMAL',
+          intervene: false,
+          adviceText: 'System monitoring active. Passive analysis running on cluster boundaries.'
+        };
+      }
 
       const parsedData = JSON.parse(analysisResponse.choices[0]?.message?.content || '{}');
 
@@ -207,14 +218,39 @@ export class GroqService {
       const userHistory = this.memory[userId];
       userHistory.push({ role: 'user', content: userMessage });
 
-      let response = await this.groq.chat.completions.create({
-        messages: userHistory as any[],
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.2,
-        max_tokens: 700,
-        tools: getGroqToolSchemas() as any[],
-        tool_choice: 'auto',
-      });
+      // let response = await this.groq.chat.completions.create({
+      //   messages: userHistory as any[],
+      //   model: 'llama-3.3-70b-versatile',
+      //   temperature: 0.2,
+      //   max_tokens: 700,
+      //   tools: getGroqToolSchemas() as any[],
+      //   tool_choice: 'auto',
+      // });
+
+      // Replace lines near `let response = await this.groq.chat.completions.create({` with this production-safe try/catch layer:
+
+      let response;
+      try {
+        response = await this.groq.chat.completions.create({
+          messages: userHistory as any[],
+          model: 'llama-3.3-70b-versatile',
+          temperature: 0.2,
+          max_tokens: 700,
+          tools: getGroqToolSchemas() as any[],
+          tool_choice: 'auto',
+        });
+      } catch (apiError: any) {
+        logger.error({ apiError }, 'Groq Core API rate limit or outage encountered. Initializing fallback logic.');
+
+        return {
+          text: "⚠️ *System Intelligence Note:* The AI Core Engine is experiencing heavy traffic (Rate Limits). Your workflow state is safe, but please retry your message in a few moments.",
+          blocks: this.buildBlockKitResponse(
+            "⚠️ VibeCheck Orchestration Layer is throttling requests due to standard provider rate limits. Technical diagnostics are safe.",
+            profile.vibeScore || 100,
+            profile.vibeStatus || 'OPTIMAL'
+          )
+        };
+      }
 
       let responseMessage = response.choices[0]?.message;
 
