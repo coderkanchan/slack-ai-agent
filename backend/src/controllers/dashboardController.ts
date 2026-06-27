@@ -7,7 +7,7 @@ import { slackApp } from '../index.js';
 
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
-    const tasks = await TaskModel.find({}).sort({ createdAt: -1 });
+    const tasks = await TaskModel.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
 
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
@@ -39,11 +39,29 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
-    const newStatus = 'COMPLETED';
+    const { action } = req.body; 
+
+    let updateFields: any = { updatedAt: new Date() };
+    let slackNotificationText = '';
+    let responseMessage = '';
+
+    if (action === 'DELETE') {
+      updateFields.isDeleted = true;
+      responseMessage = 'Task was softly removed from state cluster.';
+      slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${taskId}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+    } else if (action === 'PENDING') {
+      updateFields.status = 'PENDING';
+      responseMessage = 'Task was successfully reopened to PENDING state.';
+      slackNotificationText = `🔄 *Task Reopened/State Reset Event*\n\n• *Status Change:* \`COMPLETED\` ➔ *_\`PENDING\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+    } else {
+      updateFields.status = 'COMPLETED';
+      responseMessage = 'Task pipeline transition updated successfully to state: COMPLETED';
+      slackNotificationText = `✅ *Resolution Telemetry Event*\n\n• *Status Change:* \`PENDING\` ➔ *_\`COMPLETED\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+    }
 
     const updatedTask = await TaskModel.findByIdAndUpdate(
       taskId,
-      { $set: { status: newStatus, updatedAt: new Date() } },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -54,26 +72,30 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
       });
     }
 
-    logger.info({ taskId, newStatus }, 'Task pipeline state transitioned via REST API handler.');
+    slackNotificationText = slackNotificationText.replace('• *Status Change:*', `• *Task:* \`${updatedTask.title}\`\n• *Status Change:*`);
+    if (action === 'DELETE') {
+      slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${updatedTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+    }
+
+    logger.info({ taskId, action }, 'Task pipeline state transitioned via dynamic REST API handler.');
 
     await broadcastDashboardUpdates();
 
     try {
       const targetChannel = process.env.SLACK_CHANNEL_ID || 'general';
-
       await slackApp.client.chat.postMessage({
         channel: targetChannel,
-        text: `✅ *Resolution Telemetry Event*\n\n• *Task Resolved:* \`${updatedTask.title}\`\n• *Status Change:* \`PENDING\` ➔ *_\`COMPLETED\`_*\n• *Trigger Source:* \`VibeCheck Enterprise Panel Operations Layer\``
+        text: slackNotificationText
       });
-      logger.info({ taskId }, 'Slack resolution alert dispatched successfully.');
+      logger.info({ taskId }, 'Slack tracking alert dispatched successfully.');
     } catch (slackError) {
       logger.error({ slackError }, 'Failed to dispatch notification over Slack matrix thread.');
     }
 
     return res.status(200).json({
       success: true,
-      message: `Task pipeline transition updated successfully to state: ${newStatus}`,
-      details: { taskId, status: newStatus }
+      message: responseMessage,
+      details: { taskId, status: updatedTask.status, isDeleted: updatedTask.isDeleted }
     });
 
   } catch (error) {
