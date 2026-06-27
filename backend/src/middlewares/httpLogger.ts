@@ -10,6 +10,7 @@ export const httpLogger = pinoHttp({
   customErrorMessage: (req: IncomingMessage, res: ServerResponse, err: Error) => {
     return `HTTP ${req.method} ${req.url} failed with status ${res.statusCode} - Error: ${err.message}`;
   },
+  
   serializers: {
     req: (req: any) => ({
       method: req.method,
