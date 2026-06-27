@@ -55,7 +55,7 @@ export const registerSlackListeners = (slackApp: App): void => {
           text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n✅ [STEP 2/3] Resolution context extracted.\n⏳ [STEP 3/3] Transforming payload structure logs into user-friendly interface...'
         });
 
-        await sleep(550); // Short dramatic transition before rendering final payload
+        await sleep(550); 
 
         await client.chat.update({
           channel: channelId,
@@ -81,7 +81,6 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loadingMessageTs = '';
       try {
-        // STEP 1: Initialize Node Buffers
         const loaderResult = await client.chat.postMessage({
           channel: channelId,
           text: '⚙️ *Telemetry Audit Started:*\n⏳ [STEP 1/3] Allocating active system buffer nodes...'
@@ -90,7 +89,6 @@ export const registerSlackListeners = (slackApp: App): void => {
         loadingMessageTs = loaderResult.ts || '';
         await sleep(650);
 
-        // STEP 2: Start Inference Evaluation Matrix
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
@@ -101,7 +99,6 @@ export const registerSlackListeners = (slackApp: App): void => {
         await sleep(750);
         const aiResult = await aiResultPromise;
 
-        // STEP 3: Setup Metric Charts & Rendering Layers
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
