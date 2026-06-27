@@ -31,16 +31,14 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loadingMessageTs = '';
       try {
-        // STEP 1: Render Initial Active State
         const loaderResult = await client.chat.postMessage({
           channel: channelId,
           text: '⚙️ *Agent Node Activated:*\n⏳ [STEP 1/3] Intercepting command and syncing session tokens...'
         });
 
         loadingMessageTs = loaderResult.ts || '';
-        await sleep(650); // Pacing delay before step 2
+        await sleep(650); 
 
-        // STEP 2: Show Step 1 Complete & Trigger Parallel Core API Call
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
@@ -48,10 +46,9 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
 
         const aiResultPromise = aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
-        await sleep(750); // Dynamic reading frame pause
+        await sleep(750); 
         const aiResult = await aiResultPromise;
 
-        // STEP 3: Advance to Data Formatting Layout Packaging
         await client.chat.update({
           channel: channelId,
           ts: loadingMessageTs,
