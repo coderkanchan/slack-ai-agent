@@ -71,11 +71,22 @@ export const registerSlackListeners = (slackApp: App): void => {
       try {
         const loaderResult = await client.chat.postMessage({
           channel: channelId,
-          text: '⏳ Analyzing system parameters and workspace vibes...'
+          text: '⚙️ *Telemetry Audit Started:*\n⏳ [STEP 1/3] Allocating active system buffer nodes...'
         });
+
         loadingMessageTs = loaderResult.ts || '';
 
+        await client.chat.update({
+          channel: channelId,
+          ts: loadingMessageTs,
+          text: '⚙️ *Telemetry Audit Started:*\n✅ [STEP 1/3] Buffer nodes allocated securely.\n⏳ [STEP 2/3] Parsing workspace vibe factors via AI processing cluster...'
+        });
+
         const aiResult = await aiOrchestrator.getChatResponse(userId, dynamicPrompt, channelId);
+
+        await client.chat.update({
+          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Telemetry Audit Started:*\n✅ [STEP 1/3] Buffer nodes allocated securely.\n✅ [STEP 2/3] Workspace vibe factors successfully parsed.\n⏳ [STEP 3/3] Generating operational charts and analytics models...'
+        });
 
         await client.chat.update({
           channel: channelId,
