@@ -128,7 +128,6 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loaderMessageTs = "";
       try {
-        // STEP 1: Mention Hook Handshake
         const loaderResult = await client.chat.postMessage({
           channel: event.channel,
           blocks: [
@@ -145,7 +144,6 @@ export const registerSlackListeners = (slackApp: App): void => {
         loaderMessageTs = loaderResult.ts || "";
         await sleep(650);
 
-        // STEP 2: Request Dispatched Notice
         await client.chat.update({
           channel: event.channel,
           ts: loaderMessageTs,
@@ -164,7 +162,6 @@ export const registerSlackListeners = (slackApp: App): void => {
         await sleep(750);
         const reply = await replyPromise;
 
-        // STEP 3: Response Array Alignment
         await client.chat.update({
           channel: event.channel,
           ts: loaderMessageTs,
@@ -246,7 +243,6 @@ export const registerSlackListeners = (slackApp: App): void => {
             status: telemetryAnalysis.vibeStatus
           });
 
-          // STEP 1: Autonomous Intervention Init
           const loaderResult = await client.chat.postMessage({
             channel: channelId,
             blocks: [
@@ -266,7 +262,6 @@ export const registerSlackListeners = (slackApp: App): void => {
           if (loaderMessageTs) {
             await sleep(650);
 
-            // STEP 2: Analyze & Engine Process
             await client.chat.update({
               channel: channelId,
               ts: loaderMessageTs,
@@ -282,9 +277,8 @@ export const registerSlackListeners = (slackApp: App): void => {
               ]
             });
 
-            await sleep(850); // Slightly deeper analysis pacing window
+            await sleep(850); 
 
-            // STEP 3: Ready DB Cluster Persistence Write
             await client.chat.update({
               channel: channelId,
               ts: loaderMessageTs,
