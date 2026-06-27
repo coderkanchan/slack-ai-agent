@@ -12,7 +12,6 @@ interface SlackMessageEvent {
   user?: string;
 }
 
-// ⏳ Helper function to enforce premium transition pacing
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const registerSlackListeners = (slackApp: App): void => {
