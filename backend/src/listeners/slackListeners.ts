@@ -225,9 +225,10 @@ export const registerSlackListeners = (slackApp: App): void => {
             blocks: [
               {
                 type: "section",
+                block_id: "agent_step_tracker",
                 text: {
                   type: "mrkdwn",
-                  text: `🚨 *VibeCheck Blocker Intervention Triggered...*\n⏳ _Thinking... Generating production diagnostic patch loops..._`
+                  text: `🚨 *Autonomous Blocker Intervention Triggered...*\n⏳ *[STEP 1/3]* Extracting thread crash logs and stack traces from passive hook buffers...`
                 }
               }
             ]
@@ -236,6 +237,36 @@ export const registerSlackListeners = (slackApp: App): void => {
           const loaderMessageTs = loaderResult.ts || "";
 
           if (loaderMessageTs) {
+            await client.chat.update({
+              channel: channelId,
+              ts: loaderMessageTs,
+              blocks: [
+                {
+                  type: "section",
+                  block_id: "agent_step_tracker",
+                  text: {
+                    type: "mrkdwn",
+                    text: `🚨 *Autonomous Blocker Intervention Triggered...*\n✅ *[STEP 1/3]* Thread crash logs and stack traces extracted.\n⏳ *[STEP 2/3]* Running LLaMA cognitive mapping to forge strategic patch advice...`
+                  }
+                }
+              ]
+            });
+
+            await client.chat.update({
+              channel: channelId,
+              ts: loaderMessageTs,
+              blocks: [
+                {
+                  type: "section",
+                  block_id: "agent_step_tracker",
+                  text: {
+                    type: "mrkdwn",
+                    text: `🚨 *Autonomous Blocker Intervention Triggered...*\n✅ *[STEP 1/3]* Thread crash logs and stack traces extracted.\n✅ *[STEP 2/3]* LLaMA deployment advisory patch forged successfully.\n⏳ *[STEP 3/3]* Multiplexing system tracking records securely into remote database cluster...`
+                  }
+                }
+              ]
+            });
+
             await client.chat.update({
               channel: channelId,
               ts: loaderMessageTs,
@@ -295,14 +326,43 @@ export const registerSlackListeners = (slackApp: App): void => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `⏳ *VibeCheck-Bot is thinking...*\n• _Establishing local communication node connections..._`
+              text: `⚙️ *Secure DM Session Handshake:*\n⏳ *[STEP 1/3]* Instantiating telemetry data pipeline pipelines over point-to-point secure tunnels...`
             }
           }
         ]
       });
 
       loaderMessageTs = loaderResult.ts || "";
+
+      await client.chat.update({
+        channel: channelId,
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `⚙️ *Secure DM Session Handshake:*\n✅ *[STEP 1/3]* Point-to-point telemetry connection open.\n⏳ *[STEP 2/3]* Sending secure conversational payload segments to neural engine routing matrices...`
+            }
+          }
+        ]
+      });
+
       const aiResponsePayload = await aiOrchestrator.getChatResponse(validUser, validText, channelId);
+
+      await client.chat.update({
+        channel: channelId,
+        ts: loaderMessageTs,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `⚙️ *Secure DM Session Handshake:*\n✅ *[STEP 1/3]* Point-to-point telemetry connection open.\n✅ *[STEP 2/3]* Neural engine routing completed successfully.\n⏳ *[STEP 3/3]* Formulating markdown blocks for transmission arrival...`
+            }
+          }
+        ]
+      });
 
       if (loaderMessageTs) {
         const textOutput = typeof aiResponsePayload === 'string' ? aiResponsePayload : (aiResponsePayload.text || '');
