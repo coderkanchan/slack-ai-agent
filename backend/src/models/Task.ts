@@ -9,6 +9,7 @@ export interface ITask extends Document {
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   suggestedNextSteps: string[];
   dueDate?: Date;
+  isDeleted: boolean;
   createdAt: Date;
 }
 
@@ -38,17 +39,22 @@ const TaskSchema = new Schema<ITask>(
       enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED'],
       default: 'PENDING'
     },
-    priority: {                           
+    priority: {
       type: String,
       enum: ['LOW', 'MEDIUM', 'HIGH'],
       default: 'MEDIUM'
     },
-    suggestedNextSteps: {                 
+    suggestedNextSteps: {
       type: [String],
       default: []
     },
     dueDate: {
       type: Date
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
   {
