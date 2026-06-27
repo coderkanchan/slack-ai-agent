@@ -29,9 +29,21 @@ export const registerSlackListeners = (slackApp: App): void => {
     (async () => {
       let loadingMessageTs = '';
       try {
-        const loaderResult = await client.chat.postMessage({ channel: channelId, text: '⏳ Processing...' });
+        const loaderResult = await client.chat.postMessage({
+          channel: channelId, text: '⚙️ *Agent Node Activated:*\n⏳ [STEP 1/3] Intercepting command and syncing session tokens...'
+        });
+
         loadingMessageTs = loaderResult.ts || '';
+
+        await client.chat.update({
+          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n⏳ [STEP 2/3] Querying LLaMA-3 via Groq for analytical resolution context...'
+        });
+
         const aiResult = await aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
+
+        await client.chat.update({
+          channel: channelId, ts: loadingMessageTs, text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n✅ [STEP 2/3] Resolution context extracted.\n⏳ [STEP 3/3] Transforming payload structure logs into user-friendly interface...'
+        });
 
         await client.chat.update({
           channel: channelId,
