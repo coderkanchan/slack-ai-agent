@@ -127,7 +127,7 @@ export const MetricCards: React.FC<MetricProps> = ({ metrics }) => {
           }`}
       >
         {activeCardData && (
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-5 font-mono text-xs text-slate-400 shadow-inner">
+          <div className="bg-slate-950/50 border border-slate-800/70 rounded-xl p-5 font-mono text-xs text-slate-400 shadow-inner">
             <div className="flex justify-between items-center border-b border-slate-900 pb-2 mb-3">
               <span className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">
                 📡 Operational Node Intelligence — {activeCardData.title} Context
