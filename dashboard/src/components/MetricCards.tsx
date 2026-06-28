@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface MetricProps {
   metrics: {
@@ -13,9 +13,23 @@ interface MetricProps {
 export const MetricCards: React.FC<MetricProps> = ({ metrics }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
+  const [displayCardData, setDisplayCardData] = useState<string | null>(null);
+
   const toggleExpand = (cardName: string) => {
     setExpandedCard(expandedCard === cardName ? null : cardName);
   };
+
+  
+  useEffect(() => {
+    if (expandedCard) {
+      setDisplayCardData(expandedCard);
+    } else {
+      const timer = setTimeout(() => {
+        setDisplayCardData(null);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [expandedCard]);
 
   const cardConfigs = [
     {
@@ -80,7 +94,7 @@ export const MetricCards: React.FC<MetricProps> = ({ metrics }) => {
     }
   ];
 
-  const activeCardData = cardConfigs.find(c => c.id === expandedCard);
+  const activeCardData = cardConfigs.find(c => c.id === displayCardData);
 
   return (
     <div className="flex flex-col gap-4">
@@ -109,7 +123,7 @@ export const MetricCards: React.FC<MetricProps> = ({ metrics }) => {
       </div>
 
       <div
-        className={`transition-all duration-300 ease overflow-hidden ${expandedCard ? 'max-h-60 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2'
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${expandedCard ? 'max-h-60 opacity-100 translate-y-0 visible' : 'max-h-0 opacity-0 -translate-y-2 invisible'
           }`}
       >
         {activeCardData && (
