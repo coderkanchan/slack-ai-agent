@@ -11,23 +11,27 @@ interface Task {
 
 interface RegistryProps {
   tasks: Task[];
+  onTaskUpdated?: () => void; 
 }
 
-export const TaskRegistry: React.FC<RegistryProps> = ({ tasks }) => {
-  const [resolvingId, setResolvingId] = useState<string | null>(null);
+export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) => {
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const handleActionTrigger = async (taskId: string) => {
-    setResolvingId(taskId);
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    setUpdatingId(taskId);
     try {
-      const response = await dashboardService.resolveTask(taskId);
+      const response = await dashboardService.resolveTask(taskId, newStatus);
       if (response.success) {
-        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} resolved securely.`);
+        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to ${newStatus} status.`);
+        if (onTaskUpdated) {
+          onTaskUpdated(); 
+        }
       }
     } catch (err) {
       console.error('Action pipeline resolution failure:', err);
-      alert('Failed to transmit telemetry resolution signal.');
+      alert('Failed to transmit telemetry status transformation signal.');
     } finally {
-      setResolvingId(null);
+      setUpdatingId(null);
     }
   };
 
@@ -48,20 +52,20 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks }) => {
                 </div>
               </div>
 
-              {task.status === 'COMPLETED' ? (
-                <span className="px-2.5 py-1 rounded text-xs font-black tracking-wider border bg-indigo-950/40 border-indigo-800 text-indigo-400">
-                  {task.status}
-                </span>
-              ) : (
-                <button
-                  onClick={() => handleActionTrigger(task._id)}
-                  disabled={resolvingId === task._id}
-                  className={`px-3 py-1.5 rounded text-xs font-black tracking-wider border border-amber-500 text-amber-400 bg-amber-950/20 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-400 transition-all duration-200 shadow-md cursor-pointer ${resolvingId === task._id ? 'opacity-50 cursor-wait animate-pulse' : ''
-                    }`}
+              <div className="relative">
+                <select
+                  value={task.status}
+                  disabled={updatingId === task._id}
+                  onChange={(e) => handleStatusChange(task._id, e.target.value)}
+                  className={`bg-slate-950/80 font-black text-xs tracking-wider border rounded px-3 py-1.5 cursor-pointer outline-none transition-all duration-200 uppercase ${task.status === 'COMPLETED'
+                      ? 'border-indigo-800 text-indigo-400 bg-indigo-950/20'
+                      : 'border-amber-500 text-amber-400 bg-amber-950/20 hover:border-emerald-400 hover:text-emerald-400'
+                    } ${updatingId === task._id ? 'opacity-50 cursor-wait animate-pulse' : ''}`}
                 >
-                  {resolvingId === task._id ? 'RESOLVING ENGINE...' : 'MARK RESOLVED'}
-                </button>
-              )}
+                  <option value="PENDING" className="bg-slate-950 text-amber-400">PENDING</option>
+                  <option value="COMPLETED" className="bg-slate-950 text-indigo-400">COMPLETED</option>
+                </select>
+              </div>
 
             </div>
           ))
