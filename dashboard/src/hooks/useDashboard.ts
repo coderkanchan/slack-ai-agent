@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { dashboardService, DashboardData } from '@/services/api';
 
 export function useDashboard() {
-  
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchTelemetryData = useCallback(() => {
     dashboardService.getAnalytics()
       .then((resData) => {
         setData(resData);
@@ -20,5 +19,9 @@ export function useDashboard() {
       });
   }, []);
 
-  return { data, loading, error };
+  useEffect(() => {
+    fetchTelemetryData();
+  }, [fetchTelemetryData]);
+
+  return { data, loading, error, refreshData: fetchTelemetryData };
 }
