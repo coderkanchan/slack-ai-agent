@@ -20,7 +20,11 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     setUpdatingId(taskId);
     try {
-      const response = await (dashboardService as any).resolveTask(taskId, { action: newStatus });
+      const response = await fetch(`/api/tasks/${taskId}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: newStatus })
+      }).then(res => res.json());
 
       if (response.success) {
         console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to state [${newStatus}]`);
@@ -35,6 +39,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
       setUpdatingId(null);
     }
   };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center">
