@@ -1,7 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 export interface DashboardData {
-
   metrics: {
     totalTasks: number;
     completedTasks: number;
@@ -34,12 +33,13 @@ export const dashboardService = {
     return data;
   },
 
-  resolveTask: async (taskId: string): Promise<{ success: boolean; message?: string }> => {
+  resolveTask: async (taskId: string, payload: { action: string }): Promise<{ success: boolean; message?: string }> => {
     const response = await fetch(`${API_BASE_URL}/api/dashboard/resolve/${taskId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(payload), 
     });
 
     if (!response.ok) {
