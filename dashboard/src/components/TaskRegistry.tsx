@@ -20,11 +20,12 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     setUpdatingId(taskId);
     try {
-      const response = await (dashboardService as any).resolveTask(taskId, newStatus);
+      const response = await (dashboardService as any).resolveTask(taskId, { action: newStatus });
+
       if (response.success) {
-        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} modified to state [${newStatus}]`);
+        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to state [${newStatus}]`);
         if (onTaskUpdated) {
-          onTaskUpdated();
+          onTaskUpdated(); 
         }
       }
     } catch (err) {
@@ -34,7 +35,6 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
       setUpdatingId(null);
     }
   };
-
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center">
@@ -58,8 +58,8 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
                   disabled={updatingId === task._id}
                   onChange={(e) => handleStatusChange(task._id, e.target.value)}
                   className={`bg-slate-950/80 font-black text-xs tracking-wider border rounded px-3 py-1.5 cursor-pointer outline-none transition-all duration-200 uppercase ${task.status === 'COMPLETED'
-                      ? 'border-indigo-800 text-indigo-400 bg-indigo-950/20'
-                      : 'border-amber-500 text-amber-400 bg-amber-950/20 hover:border-emerald-400 hover:text-emerald-400'
+                    ? 'border-indigo-800 text-indigo-400 bg-indigo-950/20'
+                    : 'border-amber-500 text-amber-400 bg-amber-950/20 hover:border-emerald-400 hover:text-emerald-400'
                     } ${updatingId === task._id ? 'opacity-50 cursor-wait animate-pulse' : ''}`}
                 >
                   <option value="PENDING" className="bg-slate-950 text-amber-400">PENDING</option>
