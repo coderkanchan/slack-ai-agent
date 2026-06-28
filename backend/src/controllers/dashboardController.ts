@@ -8,7 +8,6 @@ import { slackApp } from '../index.js';
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
     const tasks = await TaskModel.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
-
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
     const pendingTasks = totalTasks - completedTasks;
@@ -39,7 +38,7 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
-    const action = req.body.action || req.query.action || req.body; 
+    const action = req.body.action || req.query.action || req.body;
 
     const existingTask = await TaskModel.findById(taskId);
     if (!existingTask) {
@@ -56,6 +55,7 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
 
     if (action === 'DELETE' || action.action === 'DELETE') {
       updateFields.isDeleted = true;
+      updateFields.status = 'ARCHIVED'; 
       responseMessage = 'Task was softly removed from state cluster.';
       slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     } else if (action === 'PENDING' || action.action === 'PENDING') {
