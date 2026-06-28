@@ -20,11 +20,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     setUpdatingId(taskId);
     try {
-      const response = await fetch(`/api/tasks/${taskId}/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: newStatus })
-      }).then(res => res.json());
+      const response = await dashboardService.resolveTask(taskId, { action: newStatus });
 
       if (response.success) {
         console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to state [${newStatus}]`);
