@@ -39,24 +39,33 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
-    const { action } = req.body; 
+    const action = req.body.action || req.query.action || req.body; 
 
+    const existingTask = await TaskModel.findById(taskId);
+    if (!existingTask) {
+      return res.status(404).json({
+        success: false,
+        message: "The requested task was not found in the state database store."
+      });
+    }
+
+    const oldStatus = existingTask.status || 'PENDING';
     let updateFields: any = { updatedAt: new Date() };
     let slackNotificationText = '';
     let responseMessage = '';
 
-    if (action === 'DELETE') {
+    if (action === 'DELETE' || action.action === 'DELETE') {
       updateFields.isDeleted = true;
       responseMessage = 'Task was softly removed from state cluster.';
-      slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${taskId}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
-    } else if (action === 'PENDING') {
+      slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+    } else if (action === 'PENDING' || action.action === 'PENDING') {
       updateFields.status = 'PENDING';
       responseMessage = 'Task was successfully reopened to PENDING state.';
-      slackNotificationText = `🔄 *Task Reopened/State Reset Event*\n\n• *Status Change:* \`COMPLETED\` ➔ *_\`PENDING\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+      slackNotificationText = `🔄 *Task Reopened/State Reset Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Status Change:* \`${oldStatus}\` ➔ *_\`PENDING\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     } else {
       updateFields.status = 'COMPLETED';
       responseMessage = 'Task pipeline transition updated successfully to state: COMPLETED';
-      slackNotificationText = `✅ *Resolution Telemetry Event*\n\n• *Status Change:* \`PENDING\` ➔ *_\`COMPLETED\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
+      slackNotificationText = `✅ *Resolution Telemetry Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Status Change:* \`${oldStatus}\` ➔ *_\`COMPLETED\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     }
 
     const updatedTask = await TaskModel.findByIdAndUpdate(
@@ -64,18 +73,6 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
       { $set: updateFields },
       { new: true }
     );
-
-    if (!updatedTask) {
-      return res.status(404).json({
-        success: false,
-        message: "The requested task was not found in the state database store."
-      });
-    }
-
-    slackNotificationText = slackNotificationText.replace('• *Status Change:*', `• *Task:* \`${updatedTask.title}\`\n• *Status Change:*`);
-    if (action === 'DELETE') {
-      slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${updatedTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
-    }
 
     logger.info({ taskId, action }, 'Task pipeline state transitioned via dynamic REST API handler.');
 
@@ -95,7 +92,7 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
     return res.status(200).json({
       success: true,
       message: responseMessage,
-      details: { taskId, status: updatedTask.status, isDeleted: updatedTask.isDeleted }
+      details: { taskId, status: updatedTask?.status, isDeleted: updatedTask?.isDeleted }
     });
 
   } catch (error) {
