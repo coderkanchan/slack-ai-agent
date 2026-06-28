@@ -25,7 +25,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
       if (response.success) {
         console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to state [${newStatus}]`);
         if (onTaskUpdated) {
-          onTaskUpdated(); 
+          onTaskUpdated();
         }
       }
     } catch (err) {
@@ -36,6 +36,8 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
     }
   };
 
+  const activeTasks = tasks?.filter(task => task.status !== 'ARCHIVED' && task.status !== 'DELETE');
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center">
@@ -43,8 +45,8 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
         <span className="text-xs font-mono text-slate-500">Live Database Buffering</span>
       </div>
       <div className="divide-y divide-slate-800 font-mono text-sm max-h-100 overflow-y-auto">
-        {tasks && tasks.length > 0 ? (
-          tasks.map((task) => (
+        {activeTasks && activeTasks.length > 0 ? (
+          activeTasks.map((task) => (
             <div key={task._id} className="p-4 flex items-center justify-between hover:bg-slate-800/40 transition duration-150">
               <div className="flex flex-col gap-1.5">
                 <span className="text-slate-100 font-medium tracking-tight text-sm">{task.title}</span>
