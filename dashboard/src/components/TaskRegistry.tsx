@@ -21,11 +21,10 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
     setUpdatingId(taskId);
     try {
       const response = await (dashboardService as any).resolveTask(taskId, newStatus);
-
       if (response.success) {
-        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to ${newStatus} status.`);
+        console.log(`⚡ Orchestration Matrix: Task ID ${taskId} modified to state [${newStatus}]`);
         if (onTaskUpdated) {
-          onTaskUpdated(); 
+          onTaskUpdated();
         }
       }
     } catch (err) {
@@ -59,12 +58,13 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
                   disabled={updatingId === task._id}
                   onChange={(e) => handleStatusChange(task._id, e.target.value)}
                   className={`bg-slate-950/80 font-black text-xs tracking-wider border rounded px-3 py-1.5 cursor-pointer outline-none transition-all duration-200 uppercase ${task.status === 'COMPLETED'
-                    ? 'border-indigo-800 text-indigo-400 bg-indigo-950/20'
-                    : 'border-amber-500 text-amber-400 bg-amber-950/20 hover:border-emerald-400 hover:text-emerald-400'
+                      ? 'border-indigo-800 text-indigo-400 bg-indigo-950/20'
+                      : 'border-amber-500 text-amber-400 bg-amber-950/20 hover:border-emerald-400 hover:text-emerald-400'
                     } ${updatingId === task._id ? 'opacity-50 cursor-wait animate-pulse' : ''}`}
                 >
                   <option value="PENDING" className="bg-slate-950 text-amber-400">PENDING</option>
                   <option value="COMPLETED" className="bg-slate-950 text-indigo-400">COMPLETED</option>
+                  <option value="DELETE" className="bg-slate-950 text-rose-500 font-bold">🗑️ ARCHIVE TASK</option>
                 </select>
               </div>
 
