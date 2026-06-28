@@ -109,7 +109,7 @@ export const MetricCards: React.FC<MetricProps> = ({ metrics }) => {
       </div>
 
       <div
-        className={`transition-all duration-300 ease-in overflow-hidden ${expandedCard ? 'max-h-60 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2'
+        className={`transition-all duration-300 ease overflow-hidden ${expandedCard ? 'max-h-60 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2'
           }`}
       >
         {activeCardData && (
