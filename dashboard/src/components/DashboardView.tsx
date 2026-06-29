@@ -206,7 +206,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
         {activeTab === 'profile' && (
           <div className="max-w-xl bg-slate-900 border border-slate-800 rounded-xl p-6 font-mono text-xs space-y-6 animate-fadeIn">
             <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center font-black text-sm text-white">KS</div>
+              <div className="w-12 h-12 rounded-lg bg-linear-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center font-black text-sm text-white">KS</div>
               <div>
                 <h3 className="text-sm font-black text-slate-200 tracking-wider">KANCHAN SHARMA</h3>
                 <p className="text-slate-400 text-[10px] mt-0.5">Role: Core Full Stack Architect</p>
