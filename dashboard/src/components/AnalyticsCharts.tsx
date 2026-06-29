@@ -68,7 +68,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
             <span className="text-[10px] text-indigo-400 font-bold transition-all duration-200">{completedVal}</span>
             <div
               style={{ height: hCompleted }}
-              className="w-full bg-gradient-to-t from-indigo-500/10 to-indigo-400/90 border-t border-indigo-400 rounded-t-[3px] transition-all duration-500 min-h-[10px]"
+              className="w-full bg-linear-to-t from-indigo-500/10 to-indigo-400/90 border-t border-indigo-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
             ></div>
             <span className="text-[10px] text-slate-500 mt-1 font-bold">Completed</span>
           </div>
