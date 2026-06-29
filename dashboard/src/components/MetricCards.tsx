@@ -23,14 +23,11 @@ interface MetricCardsProps {
 export const MetricCards: React.FC<MetricCardsProps> = ({ metrics, tasks }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
-  // Live query states based on real database records
   const nonDeletedTasks = tasks.filter(t => !t.isDeleted);
   const highPriorityPending = nonDeletedTasks.filter(t => t.priority === 'HIGH' && t.status !== 'COMPLETED').length;
 
-  // Calculate dynamic latency indicator based on task volume
   const simulatedLatency = nonDeletedTasks.length > 0 ? (nonDeletedTasks.length * 1.8 + 4).toFixed(1) : '2.1';
 
-  // Calculate friction assessment based on current stack workload
   const frictionAssessment = metrics.pendingTasks > metrics.completedTasks
     ? 'Moderate System Load'
     : 'Minimal Architectural Stress';
