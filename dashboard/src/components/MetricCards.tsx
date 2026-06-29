@@ -23,7 +23,7 @@ interface MetricCardsProps {
 export const MetricCards: React.FC<MetricCardsProps> = ({ metrics, tasks }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
-  const nonDeletedTasks = tasks.filter(t => !t.isDeleted);
+  const nonDeletedTasks = tasks.filter(t => !t.isDeleted && t.status !== 'ARCHIVED');
   const highPriorityPending = nonDeletedTasks.filter(t => t.priority === 'HIGH' && t.status !== 'COMPLETED').length;
   const simulatedLatency = nonDeletedTasks.length > 0 ? (nonDeletedTasks.length * 1.2 + 3).toFixed(1) : '14.2';
   const frictionAssessment = metrics.pendingTasks > metrics.completedTasks ? 'Moderate System Load' : 'Minimal Architectural Stress';
