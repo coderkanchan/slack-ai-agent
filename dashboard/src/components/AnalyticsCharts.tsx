@@ -59,7 +59,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
             <span className="text-[10px] text-amber-400 font-bold transition-all duration-200">{pendingVal}</span>
             <div
               style={{ height: hPending }}
-              className="w-full bg-gradient-to-t from-amber-500/10 to-amber-400/90 border-t border-amber-400 rounded-t-[3px] transition-all duration-500 min-h-[10px]"
+              className="w-full bg-linear-to-t from-amber-500/10 to-amber-400/90 border-t border-amber-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
             ></div>
             <span className="text-[10px] text-slate-500 mt-1 font-bold">Pending</span>
           </div>
