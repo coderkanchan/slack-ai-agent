@@ -85,7 +85,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
             style={{ background: `conic-gradient(#6366f1 0deg ${completedDeg}deg, #f59e0b ${completedDeg}deg 360deg)` }}
             className="w-28 h-28 rounded-full flex items-center justify-center relative shadow-2xl border border-slate-950"
           >
-            <div className="w-[86px] h-[86px] bg-slate-950 rounded-full flex flex-col items-center justify-center border border-slate-900/80">
+            <div className="w-21.5 h-21.5 bg-slate-950 rounded-full flex flex-col items-center justify-center border border-slate-900/80">
               <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ratio</span>
               <span className="text-sm font-black text-slate-200 mt-0.5">{completedVal}/{totalVal}</span>
             </div>
