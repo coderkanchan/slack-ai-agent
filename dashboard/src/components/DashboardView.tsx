@@ -79,10 +79,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
     !t.isDeleted && t.status !== 'ARCHIVED' && t.status !== 'DELETE'
   ) || [];
 
+  // const liveTotalTasks = activeTasksArray.length;
+  // const liveCompletedTasks = activeTasksArray.filter((t) => t.status === 'COMPLETED').length;
+  // const livePendingTasks = activeTasksArray.filter((t) => t.status === 'PENDING' || t.status === 'IN_PROGRESS' || t.status !== 'COMPLETED').length;
   const liveTotalTasks = activeTasksArray.length;
   const liveCompletedTasks = activeTasksArray.filter((t) => t.status === 'COMPLETED').length;
-  const livePendingTasks = activeTasksArray.filter((t) => t.status === 'PENDING' || t.status === 'IN_PROGRESS' || t.status !== 'COMPLETED').length;
-
+  const livePendingTasks = liveTotalTasks - liveCompletedTasks;
   const liveVibeScore = liveTotalTasks > 0
     ? Math.round((liveCompletedTasks / liveTotalTasks) * 100)
     : 0;
