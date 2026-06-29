@@ -42,7 +42,9 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
-    const action = req.body.action || req.query.action || req.body;
+    const action = typeof req.body === 'object' && req.body !== null && 'action' in req.body
+      ? req.body.action
+      : (req.body || req.query.action);
 
     const existingTask = await TaskModel.findById(taskId);
     if (!existingTask) {
