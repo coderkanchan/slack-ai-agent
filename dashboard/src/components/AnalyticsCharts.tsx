@@ -50,7 +50,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
             <span className="text-[10px] text-emerald-400 font-bold transition-all duration-200">{totalVal}</span>
             <div
               style={{ height: hTotal }}
-              className="w-full bg-linear-to-t from-emerald-500/10 to-emerald-400/90 border-t border-emerald-400 rounded-t-[3px] transition-all duration-500 min-h-[10px]"
+              className="w-full bg-linear-to-t from-emerald-500/10 to-emerald-400/90 border-t border-emerald-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
             ></div>
             <span className="text-[10px] text-slate-500 mt-1 font-bold">Total</span>
           </div>
