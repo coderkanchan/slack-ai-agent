@@ -12,6 +12,8 @@ interface Task {
   _id: string;
   title: string;
   status: string;
+  priority?: string;
+  isDeleted?: boolean;
   assignedTo?: string;
 }
 
@@ -73,7 +75,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
     }
   };
 
-  const archivedTasks = liveData?.tasks?.filter(t => t.status === 'ARCHIVED' || t.status === 'DELETE') || [];
+  const activeTasksArray = liveData?.tasks?.filter((t) => !t.isDeleted) || [];
+
+  const liveTotalTasks = activeTasksArray.length;
+  const liveCompletedTasks = activeTasksArray.filter((t) => t.status === 'COMPLETED').length;
+  const livePendingTasks = liveTotalTasks - liveCompletedTasks;
+
+  const liveVibeScore = liveTotalTasks > 0
+    ? Math.round((liveCompletedTasks / liveTotalTasks) * 100)
+    : 0;
+
+  const strictLiveMetrics = {
+    totalTasks: liveTotalTasks,
+    pendingTasks: livePendingTasks,
+    completedTasks: liveCompletedTasks,
+    activeVibeScore: liveVibeScore
+  };
+
+  const archivedTasks = liveData?.tasks?.filter(t => t.status === 'ARCHIVED' || t.status === 'DELETE' || t.isDeleted) || [];
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -94,34 +113,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 bg-slate-950/95 z-40 p-6 flex flex-col gap-3 font-mono text-xs pt-12">
           <button
-            onClick={() => {
-              setActiveTab('overview');
-              setIsMobileMenuOpen(false);
-            }}
-            className="p-4 border border-slate-800 rounded bg-slate-900 text-left">
+            onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }}
+            className="p-4 border border-slate-800 rounded bg-slate-900 text-left"
+          >
             📊 METRICS OVERVIEW
           </button>
           <button
-            onClick={() => {
-              setActiveTab('tasks');
-              setIsMobileMenuOpen(false);
-            }}
-            className="p-4 border border-slate-800 rounded bg-slate-900 text-left">
+            onClick={() => { setActiveTab('tasks'); setIsMobileMenuOpen(false); }}
+            className="p-4 border border-slate-800 rounded bg-slate-900 text-left"
+          >
             📋 SLACK REGISTRY
           </button>
           <button
-            onClick={() => {
-              setActiveTab('archive');
-              setIsMobileMenuOpen(false);
-            }}
-            className="p-4 border border-slate-800 rounded bg-slate-900 text-left">
+            onClick={() => { setActiveTab('archive'); setIsMobileMenuOpen(false); }}
+            className="p-4 border border-slate-800 rounded bg-slate-900 text-left"
+          >
             🗑️ ARCHIVE VAULT ({archivedTasks.length})
           </button>
           <button
-            onClick={() => {
-              setActiveTab('profile');
-              setIsMobileMenuOpen(false);
-            }} className="p-4 border border-slate-800 rounded bg-slate-900 text-left">👤 SYSTEM OPERATOR
+            onClick={() => { setActiveTab('profile'); setIsMobileMenuOpen(false); }}
+            className="p-4 border border-slate-800 rounded bg-slate-900 text-left"
+          >
+            👤 SYSTEM OPERATOR
           </button>
         </div>
       )}
@@ -146,10 +159,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
         {activeTab === 'overview' && (
           <div className="space-y-8 animate-fadeIn">
             <MetricCards
-              metrics={liveData?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 100 }}
+              metrics={strictLiveMetrics}
               tasks={liveData?.tasks || []}
             />
-            <AnalyticsCharts rawData={liveData} />
+            <AnalyticsCharts
+              rawData={{
+                metrics: strictLiveMetrics,
+                tasks: liveData?.tasks || []
+              }}
+            />
           </div>
         )}
 
