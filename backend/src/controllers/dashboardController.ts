@@ -59,12 +59,12 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
     let slackNotificationText = '';
     let responseMessage = '';
 
-    if (action === 'DELETE' || action.action === 'DELETE') {
+    if (actionStr === 'DELETE') {
       updateFields.isDeleted = true;
       updateFields.status = 'ARCHIVED';
       responseMessage = 'Task was softly removed from state cluster.';
       slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
-    } else if (action === 'PENDING' || action.action === 'PENDING') {
+    } else if (actionStr === 'PENDING') {
       updateFields.status = 'PENDING';
       responseMessage = 'Task was successfully reopened to PENDING state.';
       slackNotificationText = `🔄 *Task Reopened/State Reset Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Status Change:* \`${oldStatus}\` ➔ *_\`PENDING\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
