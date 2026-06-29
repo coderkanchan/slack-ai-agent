@@ -144,7 +144,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800/80 pb-6 gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase bg-clip-text text-transparent bg-linear-to-r from-emerald-400 via-teal-400 to-indigo-400">
               {activeTab === 'overview' && 'VibeCheck Enterprise Panel'}
               {activeTab === 'tasks' && 'Slack Integration Terminal'}
               {activeTab === 'archive' && 'Archived State Crypt'}
