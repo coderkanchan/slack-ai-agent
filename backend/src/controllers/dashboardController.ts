@@ -8,8 +8,7 @@ import { slackApp } from '../index.js';
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
-
-    const activeTasks = allTasks.filter(t => !t.isDeleted && t.status !== 'ARCHIVED');
+    const activeTasks = allTasks.filter(t => !t.isDeleted);
     const totalTasks = activeTasks.length;
     const completedTasks = activeTasks.filter(t => t.status === 'COMPLETED').length;
     const pendingTasks = totalTasks - completedTasks;
