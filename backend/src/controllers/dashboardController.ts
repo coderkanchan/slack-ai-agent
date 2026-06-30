@@ -9,8 +9,7 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
   try {
     const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
 
-    const activeTasks = allTasks.filter(t => !t.isDeleted && t.status !== 'ARCHIVED' && t.status !== 'DELETE');
-
+    const activeTasks = allTasks.filter(t => !t.isDeleted && t.status !== 'ARCHIVED');
     const totalTasks = activeTasks.length;
     const completedTasks = activeTasks.filter(t => t.status === 'COMPLETED').length;
     const pendingTasks = totalTasks - completedTasks;
