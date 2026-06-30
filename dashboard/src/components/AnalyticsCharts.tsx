@@ -1,6 +1,19 @@
 'use client';
 
 import React from 'react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 
 interface Task {
   _id: string;
@@ -24,85 +37,115 @@ interface AnalyticsChartsProps {
 export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => {
   const metrics = rawData?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 0 };
 
-  const totalVal = metrics.totalTasks || 0;
-  const pendingVal = metrics.pendingTasks || 0;
-  const completedVal = metrics.completedTasks || 0;
+  // 1. Data Structuring for Bar Chart
+  const barChartData = [
+    { name: 'Total', Count: metrics.totalTasks, fill: 'url(#totalGrad)' },
+    { name: 'Pending', Count: metrics.pendingTasks, fill: 'url(#pendingGrad)' },
+    { name: 'Completed', Count: metrics.completedTasks, fill: 'url(#completedGrad)' },
+  ];
 
-  const maxVal = Math.max(totalVal, pendingVal, completedVal, 1);
+  // 2. Data Structuring for Pie Chart
+  const pieChartData = [
+    { name: 'Completed Actions', value: metrics.completedTasks, color: '#6366f1' },
+    { name: 'Pending Operations', value: metrics.pendingTasks, color: '#f59e0b' },
+  ];
 
-  const hTotal = `${Math.max((totalVal / maxVal) * 100, 8)}%`;
-  const hPending = `${Math.max((pendingVal / maxVal) * 100, 8)}%`;
-  const hCompleted = `${Math.max((completedVal / maxVal) * 100, 8)}%`;
-
-  const completedDeg = totalVal > 0 ? (completedVal / totalVal) * 360 : 0;
+  // Fallback state logic check if no records available
+  const hasNoData = metrics.totalTasks === 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-xl p-6 font-mono flex flex-col justify-between">
-        <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-8 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span> TASK VOLUME METRICS
+      {/* CARD 1: BAR CHART (TASK VOLUME METRICS) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 font-mono flex flex-col justify-between shadow-xl">
+        <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-6 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+          TASK VOLUME METRICS
         </h3>
 
-        <div className="h-44 flex items-end justify-around gap-6 border-b border-slate-800/60 pb-2 px-6">
-         
-          <div className="flex flex-col items-center gap-2 w-16 h-full justify-end group">
-            <span className="text-[10px] text-emerald-400 font-bold transition-all duration-200">{totalVal}</span>
-            <div
-              style={{ height: hTotal }}
-              className="w-full bg-linear-to-t from-emerald-500/10 to-emerald-400/90 border-t border-emerald-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
-            ></div>
-            <span className="text-[10px] text-slate-500 mt-1 font-bold">Total</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 w-16 h-full justify-end group">
-            <span className="text-[10px] text-amber-400 font-bold transition-all duration-200">{pendingVal}</span>
-            <div
-              style={{ height: hPending }}
-              className="w-full bg-linear-to-t from-amber-500/10 to-amber-400/90 border-t border-amber-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
-            ></div>
-            <span className="text-[10px] text-slate-500 mt-1 font-bold">Pending</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 w-16 h-full justify-end group">
-            <span className="text-[10px] text-indigo-400 font-bold transition-all duration-200">{completedVal}</span>
-            <div
-              style={{ height: hCompleted }}
-              className="w-full bg-linear-to-t from-indigo-500/10 to-indigo-400/90 border-t border-indigo-400 rounded-t-[3px] transition-all duration-500 min-h-2.5"
-            ></div>
-            <span className="text-[10px] text-slate-500 mt-1 font-bold">Completed</span>
-          </div>
+        <div className="h-56 w-full flex items-center justify-center">
+          {hasNoData ? (
+            <span className="text-xs text-slate-500">No core metrics logged to plot grid.</span>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barChartData} margin={{ top: 20, right: 10, left: -25, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="pendingGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="completedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: '#1e293b', opacity: 0.2 }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                  labelStyle={{ color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}
+                />
+                <Bar dataKey="Count" radius={[4, 4, 0, 0]} barSize={40}>
+                  {barChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} stroke={index === 0 ? '#10b981' : index === 1 ? '#f59e0b' : '#6366f1'} strokeWidth={1} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-xl p-6 font-mono">
-        <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-8 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> WORKFLOW MATRIX BREAKDOWN
+      {/* CARD 2: PIE CHART (WORKFLOW MATRIX BREAKDOWN) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 font-mono shadow-xl">
+        <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-6 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+          WORKFLOW MATRIX BREAKDOWN
         </h3>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-8 h-44">
-          <div
-            style={{ background: `conic-gradient(#6366f1 0deg ${completedDeg}deg, #f59e0b ${completedDeg}deg 360deg)` }}
-            className="w-28 h-28 rounded-full flex items-center justify-center relative shadow-2xl border border-slate-950"
-          >
-            <div className="w-21.5 h-21.5 bg-slate-950 rounded-full flex flex-col items-center justify-center border border-slate-900/80">
-              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ratio</span>
-              <span className="text-sm font-black text-slate-200 mt-0.5">{completedVal}/{totalVal}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2.5 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-              <span className="text-slate-400">Completed Actions:</span>
-              <span className="text-indigo-400 font-bold">{completedVal}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span className="text-slate-400">Pending Operations:</span>
-              <span className="text-amber-400 font-bold">{pendingVal}</span>
-            </div>
-          </div>
+        <div className="h-56 w-full flex items-center justify-center">
+          {hasNoData ? (
+            <span className="text-xs text-slate-500">No operational records ready in memory stream.</span>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieChartData}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={55}
+                  outerRadius={75}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                  itemStyle={{ fontSize: '11px' }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value, entry: any) => (
+                    <span className="text-[11px] text-slate-400 font-bold tracking-tight uppercase">
+                      {value}: <span className="text-slate-200 ml-1">{entry.payload.value}</span>
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 

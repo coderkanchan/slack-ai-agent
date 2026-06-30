@@ -159,16 +159,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
 
         {activeTab === 'overview' && (
           <div className="space-y-8 animate-fadeIn">
-            <MetricCards
-              metrics={strictLiveMetrics}
-              tasks={liveData?.tasks || []}
-            />
-            <AnalyticsCharts
-              rawData={{
-                metrics: strictLiveMetrics,
-                tasks: liveData?.tasks || []
-              }}
-            />
+            <MetricCards metrics={strictLiveMetrics} tasks={liveData?.tasks || []} />
+            <AnalyticsCharts rawData={{ metrics: strictLiveMetrics, tasks: liveData?.tasks || [] }} />
           </div>
         )}
 
