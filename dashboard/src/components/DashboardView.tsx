@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { MetricCards } from './MetricCards';
@@ -75,22 +74,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ data: initialData 
     }
   };
 
-  const activeTasksArray = liveData?.tasks?.filter((t) =>
-    !t.isDeleted && t.status !== 'ARCHIVED' && t.status !== 'DELETE'
-  ) || [];
-
-  const liveTotalTasks = activeTasksArray.length;
-  const liveCompletedTasks = activeTasksArray.filter((t) => t.status === 'COMPLETED').length;
-  const livePendingTasks = liveTotalTasks - liveCompletedTasks;
-  const liveVibeScore = liveTotalTasks > 0
-    ? Math.round((liveCompletedTasks / liveTotalTasks) * 100)
-    : 0;
-
-  const strictLiveMetrics = {
-    totalTasks: liveTotalTasks,
-    pendingTasks: livePendingTasks,
-    completedTasks: liveCompletedTasks,
-    activeVibeScore: liveVibeScore
+  const strictLiveMetrics = liveData?.metrics || {
+    totalTasks: 0,
+    pendingTasks: 0,
+    completedTasks: 0,
+    activeVibeScore: 85
   };
 
   const archivedTasks = liveData?.tasks?.filter(t => t.status === 'ARCHIVED' || t.status === 'DELETE' || t.isDeleted) || [];
