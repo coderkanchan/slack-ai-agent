@@ -7,6 +7,7 @@ interface Task {
   title: string;
   status: string;
   assignedTo?: string;
+  isDeleted?: boolean;
 }
 
 interface RegistryProps {
@@ -36,8 +37,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
     }
   };
 
-  const activeTasks = tasks?.filter(task => !task.isDeleted && task.status !== 'ARCHIVED' && task.status !== 'DELETE');
-
+  const activeTasks = tasks?.filter(task => !task.isDeleted && task.status !== 'ARCHIVED') || [];
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
