@@ -37,26 +37,22 @@ interface AnalyticsChartsProps {
 export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => {
   const metrics = rawData?.metrics || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, activeVibeScore: 0 };
 
-  // 1. Data Structuring for Bar Chart
   const barChartData = [
     { name: 'Total', Count: metrics.totalTasks, fill: 'url(#totalGrad)' },
     { name: 'Pending', Count: metrics.pendingTasks, fill: 'url(#pendingGrad)' },
     { name: 'Completed', Count: metrics.completedTasks, fill: 'url(#completedGrad)' },
   ];
 
-  // 2. Data Structuring for Pie Chart
   const pieChartData = [
     { name: 'Completed Actions', value: metrics.completedTasks, color: '#6366f1' },
     { name: 'Pending Operations', value: metrics.pendingTasks, color: '#f59e0b' },
   ];
 
-  // Fallback state logic check if no records available
   const hasNoData = metrics.totalTasks === 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* CARD 1: BAR CHART (TASK VOLUME METRICS) */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 font-mono flex flex-col justify-between shadow-xl">
         <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-6 flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
@@ -102,7 +98,6 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ rawData }) => 
         </div>
       </div>
 
-      {/* CARD 2: PIE CHART (WORKFLOW MATRIX BREAKDOWN) */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 font-mono shadow-xl">
         <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-6 flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
