@@ -267,7 +267,7 @@ export class GroqService {
 
         (userHistory as any[]).push({
           role: 'assistant',
-          content: responseMessage.content || '',
+          content: responseMessage.content || null, 
           tool_calls: responseMessage.tool_calls
         });
 
