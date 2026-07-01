@@ -7,10 +7,24 @@ import { slackApp } from '../index.js';
 
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
-    const allTasks = await TaskModel.find({}).sort({ createdAt: -1 });
-    const activeTasks = allTasks.filter(t => !t.isDeleted);
-    const totalTasks = activeTasks.length;
-    const completedTasks = activeTasks.filter(t => t.status === 'COMPLETED').length;
+    const [allTasks, metricsAggregate] = await Promise.all([
+      TaskModel.find({}).sort({ createdAt: -1 }),
+      TaskModel.aggregate([
+        { $match: { isDeleted: { $ne: true } } },
+        {
+          $group: {
+            _id: null,
+            totalTasks: { $sum: 1 },
+            completedTasks: {
+              $sum: { $cond: [{ $eq: ["$status", "COMPLETED"] }, 1, 0] }
+            }
+          }
+        }
+      ])
+    ]);
+
+    const totalTasks = metricsAggregate[0]?.totalTasks || 0;
+    const completedTasks = metricsAggregate[0]?.completedTasks || 0;
     const pendingTasks = totalTasks - completedTasks;
     const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 85;
 
