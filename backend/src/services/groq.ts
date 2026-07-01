@@ -267,7 +267,7 @@ export class GroqService {
 
         (userHistory as any[]).push({
           role: 'assistant',
-          content: responseMessage.content || null, 
+          content: responseMessage.content || null,
           tool_calls: responseMessage.tool_calls
         });
 
@@ -302,7 +302,7 @@ export class GroqService {
             toolResult = await this.taskService.getChannelTasks(channelId, args ? args.targetUser : undefined);
           } else if (toolCall.function.name === 'updateTaskStatus') {
             const computedIdStr = args.taskId && typeof args.taskId === 'object' ? args.taskId.id || args.taskId._id : args.taskId;
-            toolResult = await this.taskService.updateTaskStatus(String(computedIdStr || ''), args.status);
+            toolResult = await this.taskService.updateTaskStatus(String(computedIdStr || ''), args?.status || 'COMPLETED');
           }
 
           (userHistory as any[]).push({
