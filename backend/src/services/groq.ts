@@ -178,6 +178,7 @@ export class GroqService {
   public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<{ text: string; blocks: any[] }> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
+      
       let profile = await UserProfile.findOne({ slackUserId: userId }) as any;
 
       if (!profile) {
