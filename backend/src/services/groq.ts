@@ -218,17 +218,6 @@ export class GroqService {
       const userHistory = this.memory[userId];
       userHistory.push({ role: 'user', content: userMessage });
 
-      // let response = await this.groq.chat.completions.create({
-      //   messages: userHistory as any[],
-      //   model: 'llama-3.3-70b-versatile',
-      //   temperature: 0.2,
-      //   max_tokens: 700,
-      //   tools: getGroqToolSchemas() as any[],
-      //   tool_choice: 'auto',
-      // });
-
-      // Replace lines near `let response = await this.groq.chat.completions.create({` with this production-safe try/catch layer:
-
       let response;
       try {
         response = await this.groq.chat.completions.create({
@@ -299,7 +288,8 @@ export class GroqService {
           } else if (toolCall.function.name === 'getWorkspaceTasks') {
             toolResult = await this.taskService.getChannelTasks(channelId, args ? args.targetUser : undefined);
           } else if (toolCall.function.name === 'updateTaskStatus') {
-            toolResult = await this.taskService.updateTaskStatus(args.taskId, args.status);
+            const computedIdStr = args.taskId && typeof args.taskId === 'object' ? args.taskId.id || args.taskId._id : args.taskId;
+            toolResult = await this.taskService.updateTaskStatus(String(computedIdStr || ''), args.status);
           }
 
           (userHistory as any[]).push({
