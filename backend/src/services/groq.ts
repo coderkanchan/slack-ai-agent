@@ -106,6 +106,7 @@ export class GroqService {
   public async analyzePassiveMessage(userId: string, userMessage: string): Promise<{ vibeScore: number; vibeStatus: string; intervene: boolean; adviceText: string }> {
     try {
       let profile = await UserProfile.findOne({ slackUserId: userId });
+      
       if (!profile) {
         profile = await UserProfile.create({
           slackUserId: userId,
@@ -178,7 +179,7 @@ export class GroqService {
   public async getChatResponse(userId: string, userMessage: string, channelId: string = "direct_message"): Promise<{ text: string; blocks: any[] }> {
     try {
       const detectedName = this.extractNameFromText(userMessage);
-      
+
       let profile = await UserProfile.findOne({ slackUserId: userId }) as any;
 
       if (!profile) {
