@@ -1,5 +1,6 @@
 import { TaskModel, ITask } from '../models/Task.js';
 import logger from '../utils/logger.js';
+import { broadcastDashboardUpdates } from '../utils/telemetry.js'; 
 
 export class TaskService {
   public async createTask(
@@ -18,8 +19,8 @@ export class TaskService {
         assignedBy: assignedBy,
         channelId: channelId,
         status: 'PENDING',
-        priority: priority,                  
-        suggestedNextSteps: suggestedNextSteps 
+        priority: priority,
+        suggestedNextSteps: suggestedNextSteps
       };
 
       if (dueDateStr) {
@@ -30,6 +31,12 @@ export class TaskService {
       }
 
       const newTask = await TaskModel.create(taskData);
+
+      try {
+        await broadcastDashboardUpdates();
+      } catch (wsErr) {
+        logger.error({ wsErr }, 'Failed to broadcast websocket matrix from core task lifecycle worker.');
+      }
 
       return JSON.stringify({
         status: 'SUCCESS',
@@ -73,6 +80,10 @@ export class TaskService {
 
   public async updateTaskStatus(taskId: string, newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'): Promise<string> {
     try {
+      if (!taskId) {
+        return JSON.stringify({ status: 'ERROR', message: 'Task operation processing requires structural ID keys.' });
+      }
+
       const updatedTask = await TaskModel.findByIdAndUpdate(
         taskId,
         { status: newStatus },
@@ -81,6 +92,12 @@ export class TaskService {
 
       if (!updatedTask) {
         return JSON.stringify({ status: 'ERROR', message: 'Task ID not found in database cluster registries.' });
+      }
+
+      try {
+        await broadcastDashboardUpdates();
+      } catch (wsErr) {
+        logger.error({ wsErr }, 'Failed to broadcast websocket matrix from state alterations handler.');
       }
 
       return JSON.stringify({
@@ -112,7 +129,15 @@ export class TaskService {
         dueDate: taskData.dueDate ? new Date(taskData.dueDate) : undefined
       });
 
-      return await newTask.save();
+      const savedTask = await newTask.save();
+
+      try {
+        await broadcastDashboardUpdates();
+      } catch (wsErr) {
+        logger.error({ wsErr }, 'Failed to broadcast socket signal for autonomous system injection.');
+      }
+
+      return savedTask;
     } catch (error) {
       console.error('❌ [TaskService Error] Autonomous task insertion failed:', error);
       logger.error({ error, context: 'Autonomous task insertion' }, '[TaskService Error] Autonomous task insertion failed:');
