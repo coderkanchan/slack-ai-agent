@@ -237,6 +237,7 @@ export const registerSlackListeners = (slackApp: App): void => {
 
     if (!isDirectMessage) {
       try {
+        
         const telemetryAnalysis: any = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
         if (telemetryAnalysis.intervene === true) {
