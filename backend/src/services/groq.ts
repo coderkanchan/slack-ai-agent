@@ -318,7 +318,6 @@ export class GroqService {
           model: 'llama-3.3-70b-versatile',
           temperature: 0.3,
         });
-
         rawContent = secondResponse.choices[0]?.message?.content || 'Execution failed to compute tool telemetry.';
       } else {
         rawContent = responseMessage.content || 'Unable to process communication trace.';
@@ -355,7 +354,6 @@ export class GroqService {
         text: cleanedAnswerText,
         blocks: this.buildBlockKitResponse(cleanedAnswerText, computedScore, computedStatus)
       };
-
     } catch (error) {
       logger.error({ error, context: 'Agent Core' }, 'Agent Core Failure');
       return {
