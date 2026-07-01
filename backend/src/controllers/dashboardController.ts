@@ -4,10 +4,11 @@ import { TaskModel } from '../models/Task.js';
 import { broadcastDashboardUpdates } from '../utils/telemetry.js';
 import logger from '../utils/logger.js';
 import { slackApp } from '../index.js';
+import { UserProfile } from '../models/UserProfile.js';
 
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<any> => {
   try {
-    const [allTasks, metricsAggregate] = await Promise.all([
+    const [allTasks, metricsAggregate, recentProfile] = await Promise.all([
       TaskModel.find({}).sort({ createdAt: -1 }),
       TaskModel.aggregate([
         { $match: { isDeleted: { $ne: true } } },
@@ -20,13 +21,15 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
             }
           }
         }
-      ])
+      ]),
+      UserProfile.findOne({}).sort({ updatedAt: -1 }) 
     ]);
 
     const totalTasks = metricsAggregate[0]?.totalTasks || 0;
     const completedTasks = metricsAggregate[0]?.completedTasks || 0;
     const pendingTasks = totalTasks - completedTasks;
-    const activeVibeScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 85;
+
+    const activeVibeScore = recentProfile ? recentProfile.vibeScore : 85;
 
     return res.status(200).json({
       success: true,
@@ -50,7 +53,6 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
     return res.status(500).json({ success: false, message: 'Server compilation error.' });
   }
 };
-
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
