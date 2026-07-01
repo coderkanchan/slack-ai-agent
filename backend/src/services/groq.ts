@@ -370,7 +370,7 @@ export class GroqService {
     if (history && history.length > this.MAX_HISTORY) {
       const rootPrompt = history[0];
       if (rootPrompt) {
-        this.memory[userId] = [rootPrompt, ...history.slice(-this.MAX_HISTORY)];
+        this.memory[userId] = [rootPrompt, ...history.slice(1).slice(-this.MAX_HISTORY)];
       }
     }
   }
