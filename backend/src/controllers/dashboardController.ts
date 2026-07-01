@@ -54,6 +54,11 @@ export const getDashboardAnalytics = async (req: Request, res: Response): Promis
 export const updateTaskStatus = async (req: Request, res: Response): Promise<any> => {
   try {
     const taskId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      return res.status(400).json({ success: false, message: 'Invalid target cluster node ID.' });
+    }
+
     const action = typeof req.body === 'object' && req.body !== null && 'action' in req.body
       ? req.body.action
       : (req.body || req.query.action);
@@ -78,10 +83,12 @@ export const updateTaskStatus = async (req: Request, res: Response): Promise<any
       slackNotificationText = `🗑️ *Task Archival Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Action:* \`SOFT_DELETED\`\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     } else if (action === 'PENDING') {
       updateFields.status = 'PENDING';
+      updateFields.isDeleted = false; 
       responseMessage = 'Task was successfully reopened to PENDING state.';
       slackNotificationText = `🔄 *Task Reopened/State Reset Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Status Change:* \`${oldStatus}\` ➔ *_\`PENDING\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     } else {
       updateFields.status = 'COMPLETED';
+      updateFields.isDeleted = false; 
       responseMessage = 'Task pipeline transition updated successfully to state: COMPLETED';
       slackNotificationText = `✅ *Resolution Telemetry Event*\n\n• *Task:* \`${existingTask.title}\`\n• *Status Change:* \`${oldStatus}\` ➔ *_\`COMPLETED\`_*\n• *Source:* \`VibeCheck Enterprise Panel Operations Layer\``;
     }
