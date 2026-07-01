@@ -48,7 +48,6 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
             fontSize: '12px',
           },
         });
-
         if (onTaskUpdated) {
           onTaskUpdated();
         }
