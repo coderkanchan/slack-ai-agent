@@ -2,6 +2,8 @@ import { App } from '@slack/bolt';
 import { GroqService } from '../services/groq.js';
 import logger from '../utils/logger.js';
 import { broadcastDashboardUpdates } from '../utils/telemetry.js';
+import { UserProfile } from '../models/UserProfile.js';
+import { TaskService } from '../services/task.js';
 
 interface SlackMessageEvent {
   type: string;
@@ -15,6 +17,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const registerSlackListeners = (slackApp: App): void => {
   const aiOrchestrator = new GroqService();
+  const taskService = new TaskService();
 
   slackApp.command('/ask-ai', async ({ command, ack, client }: any) => {
     await ack();
@@ -36,7 +39,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
 
         loadingMessageTs = loaderResult.ts || '';
-        await sleep(650); 
+        await sleep(650);
 
         await client.chat.update({
           channel: channelId,
@@ -45,7 +48,7 @@ export const registerSlackListeners = (slackApp: App): void => {
         });
 
         const aiResultPromise = aiOrchestrator.getChatResponse(userId, userPrompt, channelId);
-        await sleep(750); 
+        await sleep(750);
         const aiResult = await aiResultPromise;
 
         await client.chat.update({
@@ -54,7 +57,7 @@ export const registerSlackListeners = (slackApp: App): void => {
           text: '⚙️ *Agent Node Activated:*\n✅ [STEP 1/3] Session tokens synced.\n✅ [STEP 2/3] Resolution context extracted.\n⏳ [STEP 3/3] Transforming payload structure logs into user-friendly interface...'
         });
 
-        await sleep(550); 
+        await sleep(550);
 
         await client.chat.update({
           channel: channelId,
@@ -237,6 +240,22 @@ export const registerSlackListeners = (slackApp: App): void => {
         const telemetryAnalysis: any = await aiOrchestrator.analyzePassiveMessage(validUser, validText);
 
         if (telemetryAnalysis.intervene === true) {
+          await UserProfile.findOneAndUpdate(
+            {},
+            {
+              vibeScore: telemetryAnalysis.vibeScore,
+              vibeStatus: telemetryAnalysis.vibeStatus || 'STABLE',
+              updatedAt: new Date()
+            },
+            { upsert: true, new: true }
+          );
+
+          await TaskService.createAutonomousTask({
+            title: `Resolve Blocker: ${validText.substring(0, 50)}${validText.length > 50 ? '...' : ''}`,
+            assignedTo: validUser,
+            assignedBy: 'AI_ORCHESTRATOR',
+            channelId: channelId
+          });
           const analyticsPayload = JSON.stringify({
             score: telemetryAnalysis.vibeScore,
             status: telemetryAnalysis.vibeStatus
@@ -276,7 +295,7 @@ export const registerSlackListeners = (slackApp: App): void => {
               ]
             });
 
-            await sleep(850); 
+            await sleep(850);
 
             await client.chat.update({
               channel: channelId,
