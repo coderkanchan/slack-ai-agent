@@ -5,6 +5,7 @@ import { TaskService } from './task.js';
 import { UserProfile } from '../models/UserProfile.js';
 import logger from '../utils/logger.js';
 import { getGroqToolSchemas, toolRegistry } from '../utils/agentTools.js';
+import { broadcastDashboardUpdates } from '../utils/telemetry.js';
 
 export class GroqService {
   private groq: Groq;
@@ -105,7 +106,14 @@ export class GroqService {
   public async analyzePassiveMessage(userId: string, userMessage: string): Promise<{ vibeScore: number; vibeStatus: string; intervene: boolean; adviceText: string }> {
     try {
       let profile = await UserProfile.findOne({ slackUserId: userId });
-
+      if (!profile) {
+        profile = await UserProfile.create({
+          slackUserId: userId,
+          name: 'Team Member',
+          vibeScore: 100,
+          vibeStatus: 'OPTIMAL'
+        });
+      }
       const prompt = `You are an expert workspace intelligence layer tracking live team communication context.
       Analyze this live user chat input for technical blocks, runtime crashes, architectural frustration, or code errors.
 
@@ -154,6 +162,11 @@ export class GroqService {
         profile.vibeStatus = computedStatus;
         profile.updatedAt = new Date();
         await profile.save();
+        try {
+          await broadcastDashboardUpdates();
+        } catch (wsErr) {
+          logger.error({ wsErr }, 'Websocket streaming drop encountered during active passive diagnostics updates.');
+        }
       }
       return { vibeScore: computedScore, vibeStatus: computedStatus, intervene: shouldIntervene, adviceText };
     } catch (err) {
@@ -329,6 +342,7 @@ export class GroqService {
           profile.vibeStatus = computedStatus;
           profile.updatedAt = new Date();
           await profile.save();
+          await broadcastDashboardUpdates();
         } catch (parseErr) {
           logger.error({ error: parseErr, context: 'parse dynamic vibe engine text streams' }, 'Failed to parse dynamic vibe engine text streams:');
         }
