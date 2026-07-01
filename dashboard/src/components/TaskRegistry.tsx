@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { dashboardService } from '@/services/api';
+import { toast } from 'react-hot-toast';
 
 interface Task {
   _id: string;
@@ -20,18 +21,53 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     setUpdatingId(taskId);
+
+    const toastId = toast.loading(`📡 Transmitting telemetry alter signal [${newStatus}]...`, {
+      style: {
+        background: '#0f172a',
+        color: '#94a3b8',
+        border: '1px solid #1e293b',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+      },
+    });
+
     try {
       const response = await dashboardService.resolveTask(taskId, { action: newStatus });
 
       if (response.success) {
         console.log(`⚡ Orchestration Matrix: Task ID ${taskId} synchronized to state [${newStatus}]`);
+
+        toast.success(`✅ State Synchronized: Matrix updated to [${newStatus}]`, {
+          id: toastId,
+          style: {
+            background: '#022c22',
+            color: '#34d399',
+            border: '1px solid #064e3b',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+          },
+        });
+
         if (onTaskUpdated) {
           onTaskUpdated();
         }
+      } else {
+        throw new Error('Pipeline response unverified.');
       }
     } catch (err) {
       console.error('Action pipeline resolution failure:', err);
-      alert('Failed to transmit telemetry status transformation signal.');
+
+      toast.error('❌ Critical: Telemetry alteration handshake failed.', {
+        id: toastId,
+        style: {
+          background: '#4c0519',
+          color: '#f43f5e',
+          border: '1px solid #881337',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+        },
+      });
     } finally {
       setUpdatingId(null);
     }
@@ -75,7 +111,7 @@ export const TaskRegistry: React.FC<RegistryProps> = ({ tasks, onTaskUpdated }) 
             </div>
           ))
         ) : (
-          <div className="p-12 text-center text-slate-500 text-sm">
+          <div className="p-12 text-center text-slate-500 text-xs">
             No dynamic tasks caught inside cluster nodes. Trigger bot tracking over Slack.
           </div>
         )}
