@@ -28,9 +28,11 @@ export const dashboardService = {
     }
 
     const data = await response.json();
-    if (!data.success) throw new Error(data.message || 'Failed to fetch metrics');
+    if (data.hasOwnProperty('success') && !data.success) {
+      throw new Error(data.message || 'Failed to fetch metrics');
+    }
 
-    return data;
+    return data.data ? data.data : data;
   },
 
   resolveTask: async (taskId: string, payload: { action: string }): Promise<{ success: boolean; message?: string }> => {
@@ -39,7 +41,7 @@ export const dashboardService = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload), 
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
